@@ -78,6 +78,7 @@ The `Player` class handles player-specific behaviors:
 - **Dodge System**: Temporary speed boost and invincibility
 - **Aetherium Essence**: Resource used for weaving abilities
 - **Buff System**: Tracks active buffs (currently only damage buff)
+- **Key Management**: Tracking collected keys and consumption for doors
 - **State Management**: Tracking attack, dodge, and buff states
 - **Visual Feedback**: Visual indicators for damage, invincibility, and buff states
 
@@ -90,6 +91,7 @@ The combat system consists of several components working together:
 - **Damage System**: Health tracking and damage application to enemies and player
 - **Invincibility Frames**: Temporary invulnerability during dodge actions and after taking damage
 - **Death Handling**: GameOver state transition when player health reaches zero
+- **Combat Manager**: Centralized handling of damage application, enemy death detection, and combat effects
 
 ### 3.6 Enemy Entity (Enemy.cs)
 
@@ -122,14 +124,14 @@ The game state flow has been expanded to include:
 
 The dungeon generation system creates and manages the game's level structure:
 
-- **Room Class**: Stores room bounds and provides utility methods like finding the center
-- **Dungeon Class**: Contains a collection of rooms and corridors and identifies the starting room
+- **Room Class**: Stores room bounds, type, and provides utility methods
+- **RoomType Enum**: Defines room types (Normal, Start, Treasure)
+- **Dungeon Class**: Contains a collection of rooms and corridors, identifies starting room, and manages obstacle bounds
 - **BSPNode Class**: Represents nodes in the Binary Space Partitioning tree used for procedural generation
 - **DungeonGenerator**: Creates procedurally generated dungeons using a BSP algorithm
-- **Rendering**: Rooms and corridors are rendered during gameplay
-- **Player Spawning**: Player spawns in the center of the first room
-- **Enemy Placement**: Enemies are positioned in rooms for encounters
-- **Altar Placement**: Weaving altar is positioned in a separate room
+- **Room Placement**: Strategic positioning of special room types (Start, Treasure)
+- **IsMovementValid**: Enhanced collision checking for level bounds and obstacles
+- **Obstacle Management**: Tracking of dynamic obstacles like destructible crates
 
 #### BSP-based Procedural Generation
 
@@ -428,6 +430,85 @@ Key components include:
 5. **Status Indicators**: UI elements showing mana, cooldowns, and spell readiness
 
 This system complements the existing melee combat abilities, giving players multiple combat options depending on the situation and enemy type.
+
+### 3.11 Environmental Interactivity System
+
+The environmental interactivity system adds depth to the dungeon through hazards, destructible objects, and interactive elements:
+
+#### 3.11.1 Hazards
+
+The hazard system introduces elements that can damage entities in the game:
+
+- **SpikeTrap Class**: Implements traps with state management
+  - Armed/Disarmed states with visual distinction
+  - Timed activation cycles for predictable patterns
+  - Collision detection with player and enemies
+  - Damage application to any entity touching an armed trap
+  - Entity-specific damage cooldowns to prevent rapid damage
+
+#### 3.11.2 Destructible Objects
+
+The destructible object system provides interactive environment elements:
+
+- **DestructibleCrate Class**: Implements breakable objects
+  - Health-based destruction system
+  - Collision detection with player melee attacks and projectiles
+  - Advanced distance-based collision for robust projectile interaction
+  - Random loot drops when destroyed
+  - Obstacle properties preventing player movement
+  - Debug tools for testing (F1 key for instant destruction)
+
+#### 3.11.3 Progression Elements
+
+The progression system introduces gating mechanics and rewards:
+
+- **Door Class**: Implements locked passages
+  - Locked/Unlocked states with visual distinction
+  - Key requirement for unlocking
+  - Placement at entrances to special rooms
+  - Interaction system for unlocking when near
+
+- **TreasureChest Class**: Implements reward containers
+  - Open/Closed states with visual feedback
+  - Interaction system when player is nearby
+  - UI prompts showing available interactions
+  - Enhanced rewards compared to regular enemies
+  - Special placement in treasure rooms
+
+- **Key System**: Implements collection and usage mechanics
+  - Keys as a special loot type
+  - Player inventory tracking of collected keys
+  - Consumption when unlocking doors
+  - Strategic placement in different rooms
+
+#### 3.11.4 Interaction Framework
+
+A unified interaction system handles all environmental elements:
+
+- **Proximity Detection**: Distance-based identification of interactive elements
+- **Context-Sensitive Prompts**: UI elements showing available actions
+- **Action Mapping**: Consistent use of the Interact key (E) for all interactions
+- **Visual Feedback**: Clear indication of interaction results
+- **Notification System**: Popup messages for significant actions
+
+#### 3.11.5 Notification System
+
+A notification system provides feedback on player actions:
+
+- **Popup Messages**: Temporary text displays for key events
+- **Item Acquisition**: Details of collected items and resources
+- **Fade Effect**: Smooth transitions for message appearance/disappearance
+- **Centered Display**: Consistent positioning for better visibility
+
+#### 3.11.6 Environmental Element Integration
+
+All environmental elements are integrated into the core game systems:
+
+- **Dungeon Generation**: Strategic placement during level creation
+- **Obstacle System**: Dynamic updating of traversable areas
+- **Camera System**: Proper viewing of all environmental elements
+- **Minimap Integration**: Visual representation on the navigation display
+- **Combat Integration**: Interaction with the damage and collision systems
 
 ## 4. Current Version Implementation
 

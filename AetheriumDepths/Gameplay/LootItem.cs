@@ -8,7 +8,15 @@ namespace AetheriumDepths.Gameplay
     /// </summary>
     public enum LootType
     {
-        HealthPotion
+        /// <summary>
+        /// Health potion that restores player health when collected.
+        /// </summary>
+        HealthPotion,
+        
+        /// <summary>
+        /// Key that can be used to unlock doors.
+        /// </summary>
+        Key
     }
     
     /// <summary>

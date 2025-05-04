@@ -172,5 +172,30 @@ namespace AetheriumDepths.Gameplay
             
             Console.WriteLine($"Enemy defeated! Player received {_aetheriumEssenceReward} Aetherium Essence.");
         }
+
+        /// <summary>
+        /// Apply damage directly to an enemy from an environment source (like traps).
+        /// </summary>
+        /// <param name="enemy">The enemy to damage.</param>
+        /// <param name="damageAmount">The amount of damage to apply.</param>
+        /// <returns>True if damage was applied.</returns>
+        public bool ApplyDamageToEnemy(Enemy enemy, int damageAmount)
+        {
+            if (enemy == null || !enemy.IsActive)
+            {
+                return false;
+            }
+            
+            // Apply damage to enemy
+            enemy.TakeDamage(damageAmount);
+            
+            // Check if enemy was killed
+            if (!enemy.IsActive)
+            {
+                HandleEnemyDeath(enemy);
+            }
+            
+            return true;
+        }
     }
 } 

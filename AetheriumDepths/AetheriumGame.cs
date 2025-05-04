@@ -7,6 +7,8 @@ using AetheriumDepths.Core;
 using AetheriumDepths.Entities;
 using AetheriumDepths.Generation;
 using AetheriumDepths.Gameplay;
+using AetheriumDepths.Gameplay.Hazards;
+using AetheriumDepths.Gameplay.Interactables;
 
 namespace AetheriumDepths
 {
@@ -84,19 +86,67 @@ namespace AetheriumDepths
         private const int RangedEnemyHealth = 2; // Ranged enemies have same health as fast ones
         private const float EnemySpawnChance = 0.5f; // 50% chance for enemies to drop items
 
+        // Environmental elements
+        private List<SpikeTrap> _spikeTraps;
+        private List<DestructibleCrate> _crates;
+        private List<TreasureChest> _treasureChests;
+        private List<Door> _doors;
+        
+        // Projectiles
+        private List<Projectile> _projectiles = new List<Projectile>();
+        
+        // UI state
+        private bool _isNearAltar = false;
+        private bool _isNearChest = false;
+        private TreasureChest _nearbyChest = null;
+        
+        // Popup notification
+        private string _popupMessage = "";
+        private float _popupTimer = 0f;
+        private const float POPUP_DURATION = 3.0f; // Show popup for 3 seconds
+
         public AetheriumGame()
         {
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
+            IsMouseVisible = true;
             
-            // Set window properties to ensure visibility
+            // Set window size to full HD
             _graphics.PreferredBackBufferWidth = 1920;
             _graphics.PreferredBackBufferHeight = 1080;
-            _graphics.IsFullScreen = false;
-            _graphics.ApplyChanges();
             
-            Window.Title = "Aetherium Depths";
-            IsMouseVisible = true;
+            // Create the state manager with default state
+            _stateManager = new StateManager();
+            _stateManager.ChangeState(StateManager.GameState.Gameplay); // Fixed: use ChangeState method
+            
+            // Create input manager
+            _inputManager = new InputManager();
+            
+            // Initialize entity lists
+            _enemies = new List<Enemy>();
+            _projectiles = new List<Projectile>();
+            _lootItems = new List<LootItem>();
+            
+            // Initialize environmental elements lists
+            _spikeTraps = new List<SpikeTrap>();
+            _crates = new List<DestructibleCrate>();
+            _treasureChests = new List<TreasureChest>();
+            _doors = new List<Door>();
+            
+            // Create the dungeon generator
+            _dungeonGenerator = new DungeonGenerator();
+            
+            // Create combat manager
+            _combatManager = new CombatManager(
+                null, // Will set this after player is initialized
+                _enemies,
+                EnemyTouchDamage,
+                AttackDamage,
+                DamageBuffMultiplier,
+                AetheriumEssenceReward);
+                
+            // Subscribe to enemy killed event
+            _combatManager.EnemyKilled += OnEnemyKilled;
         }
 
         protected override void Initialize()
@@ -179,7 +229,7 @@ namespace AetheriumDepths
                 _rangedEnemyTexture = enemySprite;
             }
             
-            // Create health potion texture if not available
+            // Load health potion texture
             try
             {
                 _healthPotionTexture = Content.Load<Texture2D>("HealthPotionSprite");
@@ -195,6 +245,172 @@ namespace AetheriumDepths
                     colorData[i] = Color.Red;
                 }
                 _healthPotionTexture.SetData(colorData);
+            }
+            
+            // Load environmental element textures
+            
+            // Load spike trap textures
+            Texture2D spikeTrapsArmedTexture, spikeTrapsDisarmedTexture;
+            try
+            {
+                spikeTrapsArmedTexture = Content.Load<Texture2D>("SpikeTrapArmedSprite");
+                spikeTrapsDisarmedTexture = Content.Load<Texture2D>("SpikeTrapDisarmedSprite");
+                Console.WriteLine("Spike trap textures loaded successfully");
+            }
+            catch (Exception)
+            {
+                // Create simple placeholders
+                spikeTrapsArmedTexture = new Texture2D(GraphicsDevice, 32, 32);
+                spikeTrapsDisarmedTexture = new Texture2D(GraphicsDevice, 32, 32);
+                
+                // Armed texture (red with spikes)
+                Color[] armedColorData = new Color[1024];
+                for (int i = 0; i < 1024; i++)
+                {
+                    // Create a pattern to represent spikes
+                    int x = i % 32;
+                    int y = i / 32;
+                    
+                    // Make the edges and center spikes appear red
+                    if (x < 3 || x > 28 || y < 3 || y > 28 || 
+                        (x >= 13 && x <= 18 && y >= 13 && y <= 18))
+                    {
+                        armedColorData[i] = Color.Red;
+                    }
+                    else
+                    {
+                        armedColorData[i] = Color.DarkRed;
+                    }
+                }
+                spikeTrapsArmedTexture.SetData(armedColorData);
+                
+                // Disarmed texture (dark gray)
+                Color[] disarmedColorData = new Color[1024];
+                for (int i = 0; i < 1024; i++)
+                {
+                    disarmedColorData[i] = Color.DarkGray;
+                }
+                spikeTrapsDisarmedTexture.SetData(disarmedColorData);
+            }
+            
+            // Load crate texture
+            Texture2D crateTexture;
+            try
+            {
+                crateTexture = Content.Load<Texture2D>("CrateSprite");
+                Console.WriteLine("Crate texture loaded successfully");
+            }
+            catch (Exception)
+            {
+                // Create a simple brown placeholder
+                crateTexture = new Texture2D(GraphicsDevice, 32, 32);
+                Color[] colorData = new Color[1024];
+                for (int i = 0; i < 1024; i++)
+                {
+                    colorData[i] = Color.SaddleBrown;
+                }
+                crateTexture.SetData(colorData);
+            }
+            
+            // Load treasure chest textures
+            Texture2D chestClosedTexture, chestOpenTexture;
+            try
+            {
+                chestClosedTexture = Content.Load<Texture2D>("ChestClosedSprite");
+                chestOpenTexture = Content.Load<Texture2D>("ChestOpenSprite");
+                Console.WriteLine("Chest textures loaded successfully");
+            }
+            catch (Exception)
+            {
+                // Create simple placeholders
+                chestClosedTexture = new Texture2D(GraphicsDevice, 32, 32);
+                chestOpenTexture = new Texture2D(GraphicsDevice, 32, 32);
+                
+                // Closed texture (gold/brown)
+                Color[] closedColorData = new Color[1024];
+                for (int i = 0; i < 1024; i++)
+                {
+                    closedColorData[i] = Color.Goldenrod;
+                }
+                chestClosedTexture.SetData(closedColorData);
+                
+                // Open texture (gold with dark center)
+                Color[] openColorData = new Color[1024];
+                for (int i = 0; i < 1024; i++)
+                {
+                    int x = i % 32;
+                    int y = i / 32;
+                    
+                    if (x >= 8 && x <= 24 && y >= 8 && y <= 24)
+                    {
+                        openColorData[i] = Color.Black;
+                    }
+                    else
+                    {
+                        openColorData[i] = Color.Goldenrod;
+                    }
+                }
+                chestOpenTexture.SetData(openColorData);
+            }
+            
+            // Load door textures
+            Texture2D doorLockedTexture, doorUnlockedTexture;
+            try
+            {
+                doorLockedTexture = Content.Load<Texture2D>("DoorLockedSprite");
+                doorUnlockedTexture = Content.Load<Texture2D>("DoorUnlockedSprite");
+                Console.WriteLine("Door textures loaded successfully");
+            }
+            catch (Exception)
+            {
+                // Create simple placeholders
+                doorLockedTexture = new Texture2D(GraphicsDevice, 32, 32);
+                doorUnlockedTexture = new Texture2D(GraphicsDevice, 32, 32);
+                
+                // Locked texture (dark brown with gold keyhole)
+                Color[] lockedColorData = new Color[1024];
+                for (int i = 0; i < 1024; i++)
+                {
+                    int x = i % 32;
+                    int y = i / 32;
+                    
+                    if (x >= 13 && x <= 19 && y >= 13 && y <= 19)
+                    {
+                        lockedColorData[i] = Color.Gold;
+                    }
+                    else
+                    {
+                        lockedColorData[i] = Color.Brown;
+                    }
+                }
+                doorLockedTexture.SetData(lockedColorData);
+                
+                // Unlocked texture (lighter brown, no keyhole)
+                Color[] unlockedColorData = new Color[1024];
+                for (int i = 0; i < 1024; i++)
+                {
+                    unlockedColorData[i] = Color.SandyBrown;
+                }
+                doorUnlockedTexture.SetData(unlockedColorData);
+            }
+            
+            // Load key texture
+            Texture2D keyTexture;
+            try
+            {
+                keyTexture = Content.Load<Texture2D>("KeySprite");
+                Console.WriteLine("Key texture loaded successfully");
+            }
+            catch (Exception)
+            {
+                // Create a simple gold key placeholder
+                keyTexture = new Texture2D(GraphicsDevice, 16, 16);
+                Color[] colorData = new Color[256];
+                for (int i = 0; i < 256; i++)
+                {
+                    colorData[i] = Color.Gold;
+                }
+                keyTexture.SetData(colorData);
             }
             
             // Initialize enemy list
@@ -251,6 +467,12 @@ namespace AetheriumDepths
             _enemies.Clear();
             _lootItems.Clear();
             
+            // Clear environmental elements
+            _spikeTraps.Clear();
+            _crates.Clear();
+            _treasureChests.Clear();
+            _doors.Clear();
+            
             // Generate a new dungeon using BSP
             _currentDungeon = _dungeonGenerator.GenerateBSPDungeon(GraphicsDevice.Viewport.Bounds);
             
@@ -278,77 +500,408 @@ namespace AetheriumDepths
                     availableRooms.Remove(_currentDungeon.StartingRoom);
                 }
                 
-                // Determine how many enemies to spawn (scale with number of rooms)
-                int totalEnemies = availableRooms.Count * 2; // 2 enemies per room on average
-                
-                for (int i = 0; i < totalEnemies; i++)
+                // Find the treasure room if it exists
+                Room treasureRoom = null;
+                foreach (var room in availableRooms)
                 {
-                    // Select a random room (weighted toward later rooms for more challenge)
-                    int roomIndex = Math.Min(
-                        (int)(Random.Shared.NextDouble() * Random.Shared.NextDouble() * availableRooms.Count),
-                        availableRooms.Count - 1);
-                    
-                    Room enemyRoom = availableRooms[roomIndex];
-                    
-                    // Randomize position within the room
-                    float posX = enemyRoom.Bounds.X + (float)Random.Shared.NextDouble() * enemyRoom.Bounds.Width;
-                    float posY = enemyRoom.Bounds.Y + (float)Random.Shared.NextDouble() * enemyRoom.Bounds.Height;
-                    
-                    // Ensure we're not too close to the edge
-                    posX = MathHelper.Clamp(posX, enemyRoom.Bounds.X + 32, enemyRoom.Bounds.X + enemyRoom.Bounds.Width - 32);
-                    posY = MathHelper.Clamp(posY, enemyRoom.Bounds.Y + 32, enemyRoom.Bounds.Y + enemyRoom.Bounds.Height - 32);
-                    
-                    Vector2 enemyPosition = new Vector2(posX, posY);
-                    
-                    // Randomly select enemy type
-                    double enemyTypeRoll = Random.Shared.NextDouble();
-                    Enemy newEnemy;
-                    
-                    if (enemyTypeRoll < 0.3) // 30% chance for ranged enemy
+                    if (room.Type == RoomType.Treasure)
                     {
-                        newEnemy = new RangedEnemy(
-                            enemyPosition, 
-                            _rangedEnemyTexture, 
-                            _projectileTexture,
-                            RangedEnemyHealth);
-                        Console.WriteLine($"Spawned ranged enemy at {enemyPosition}");
+                        treasureRoom = room;
+                        break;
                     }
-                    else if (enemyTypeRoll < 0.6) // 30% chance for fast enemy
+                }
+                
+                // Remove treasure room from available rooms for enemy spawning
+                if (treasureRoom != null)
+                {
+                    availableRooms.Remove(treasureRoom);
+                }
+                
+                // Position weaving altar in a random room (not starting or treasure)
+                if (availableRooms.Count > 0)
+                {
+                    // Choose a room for the altar
+                    Room altarRoom = availableRooms[new Random().Next(availableRooms.Count)];
+                    availableRooms.Remove(altarRoom); // No enemies in altar room
+                    
+                    // Position altar in the room center
+                    Vector2 altarPosition = altarRoom.Center;
+                    
+                    // Adjust for altar sprite center
+                    altarPosition.X -= (_weavingAltar.Sprite?.Width ?? 0) / 2;
+                    altarPosition.Y -= (_weavingAltar.Sprite?.Height ?? 0) / 2;
+                    
+                    _weavingAltar.Position = altarPosition;
+                    
+                    Console.WriteLine($"Positioned altar at {altarPosition}");
+                }
+                
+                // Spawn treasure chest in the treasure room
+                if (treasureRoom != null)
+                {
+                    // Retrieve chest textures
+                    Texture2D chestClosedTexture = null;
+                    Texture2D chestOpenTexture = null;
+                    
+                    try
                     {
-                        newEnemy = new FastEnemy(
-                            enemyPosition,
-                            _fastEnemyTexture,
-                            FastEnemyHealth);
-                        Console.WriteLine($"Spawned fast enemy at {enemyPosition}");
+                        chestClosedTexture = Content.Load<Texture2D>("ChestClosedSprite");
+                        chestOpenTexture = Content.Load<Texture2D>("ChestOpenSprite");
                     }
-                    else // 40% chance for basic enemy
+                    catch
                     {
-                        newEnemy = new Enemy(
-                            enemyPosition,
-                            _enemies.Count > 0 ? _enemies[0].Sprite : Content.Load<Texture2D>("EnemySprite"),
-                            EnemyHealth);
-                        Console.WriteLine($"Spawned basic enemy at {enemyPosition}");
+                        // Create placeholders if they don't exist yet
+                        chestClosedTexture = new Texture2D(GraphicsDevice, 32, 32);
+                        Color[] closedColorData = new Color[1024];
+                        for (int i = 0; i < 1024; i++) closedColorData[i] = Color.Goldenrod;
+                        chestClosedTexture.SetData(closedColorData);
+                        
+                        chestOpenTexture = new Texture2D(GraphicsDevice, 32, 32);
+                        Color[] openColorData = new Color[1024];
+                        for (int i = 0; i < 1024; i++)
+                        {
+                            int x = i % 32;
+                            int y = i / 32;
+                            if (x >= 8 && x <= 24 && y >= 8 && y <= 24) openColorData[i] = Color.Black;
+                            else openColorData[i] = Color.Goldenrod;
+                        }
+                        chestOpenTexture.SetData(openColorData);
                     }
                     
-                    _enemies.Add(newEnemy);
+                    // Position chest in the treasure room center
+                    Vector2 chestPosition = treasureRoom.Center;
+                    chestPosition.X -= (chestClosedTexture?.Width ?? 0) / 2;
+                    chestPosition.Y -= (chestClosedTexture?.Height ?? 0) / 2;
+                    
+                    TreasureChest chest = new TreasureChest(chestPosition, chestClosedTexture, chestOpenTexture);
+                    _treasureChests.Add(chest);
+                    
+                    Console.WriteLine($"Positioned treasure chest in treasure room at {chestPosition}");
+                    
+                    // Place a door at the entrance to the treasure room
+                    // This requires finding a corridor connected to the treasure room
+                    PlaceDoorToRoom(treasureRoom);
+                }
+                
+                // Spawn enemies in the remaining rooms
+                foreach (Room room in availableRooms)
+                {
+                    // Decide how many enemies to spawn based on room size
+                    int maxEnemies = Math.Max(1, room.Bounds.Width * room.Bounds.Height / 300000); // 1-3 enemies based on room size
+                    int enemiesInRoom = new Random().Next(1, maxEnemies + 1);
+                    
+                    for (int i = 0; i < enemiesInRoom; i++)
+                    {
+                        // Random position within the room
+                        int enemyX = new Random().Next(room.Bounds.X + 50, room.Bounds.X + room.Bounds.Width - 50);
+                        int enemyY = new Random().Next(room.Bounds.Y + 50, room.Bounds.Y + room.Bounds.Height - 50);
+                        
+                        // Create a random enemy type
+                        Enemy enemy = null;
+                        int enemyType = new Random().Next(3); // 0 = basic, 1 = fast, 2 = ranged
+                        
+                        switch (enemyType)
+                        {
+                            case 0: // Basic enemy
+                                enemy = new Enemy(
+                                    new Vector2(enemyX, enemyY),
+                                    Content.Load<Texture2D>("EnemySprite"),
+                                    EnemyHealth);
+                                break;
+                            case 1: // Fast enemy
+                                enemy = new FastEnemy(
+                                    new Vector2(enemyX, enemyY),
+                                    _fastEnemyTexture,
+                                    FastEnemyHealth);
+                                break;
+                            case 2: // Ranged enemy
+                                enemy = new RangedEnemy(
+                                    new Vector2(enemyX, enemyY),
+                                    _rangedEnemyTexture,
+                                    _projectileTexture,
+                                    RangedEnemyHealth);
+                                break;
+                        }
+                        
+                        if (enemy != null)
+                        {
+                            _enemies.Add(enemy);
+                        }
+                    }
+                    
+                    // Spawn some crates in the room
+                    SpawnCratesInRoom(room);
+                    
+                    // Spawn some spike traps in the room
+                    SpawnSpikeTrapsInRoom(room);
                 }
             }
+        }
+        
+        /// <summary>
+        /// Places destructible crates in a room.
+        /// </summary>
+        /// <param name="room">The room to place crates in.</param>
+        private void SpawnCratesInRoom(Room room)
+        {
+            // Retrieve crate texture
+            Texture2D crateTexture = null;
             
-            // Position weaving altar in a random middle room
-            if (_currentDungeon?.Rooms.Count > 1)
+            try
             {
-                // Get a room from the middle of the array (not first, not last)
-                int altarRoomIndex = _currentDungeon.Rooms.Count <= 2 ? 0 : _currentDungeon.Rooms.Count / 2;
-                Room altarRoom = _currentDungeon.Rooms[altarRoomIndex];
-                Vector2 altarPosition = altarRoom.Center;
+                crateTexture = Content.Load<Texture2D>("CrateSprite");
+            }
+            catch
+            {
+                // Create a placeholder if it doesn't exist yet
+                crateTexture = new Texture2D(GraphicsDevice, 32, 32);
+                Color[] colorData = new Color[1024];
+                for (int i = 0; i < 1024; i++) colorData[i] = Color.SaddleBrown;
+                crateTexture.SetData(colorData);
+            }
+            
+            // Decide how many crates to spawn based on room size
+            int maxCrates = Math.Max(2, room.Bounds.Width * room.Bounds.Height / 250000); // 2-4 crates based on room size
+            int cratesInRoom = new Random().Next(2, maxCrates + 1);
+            
+            for (int i = 0; i < cratesInRoom; i++)
+            {
+                // Random position within the room (away from the center)
+                int crateX, crateY;
                 
-                // Adjust for altar sprite center
-                altarPosition.X -= (_weavingAltar.Sprite?.Width ?? 0) / 2;
-                altarPosition.Y -= (_weavingAltar.Sprite?.Height ?? 0) / 2;
+                // Avoid center of the room (where players/enemies/altars might be)
+                do
+                {
+                    crateX = new Random().Next(room.Bounds.X + 50, room.Bounds.X + room.Bounds.Width - 50);
+                    crateY = new Random().Next(room.Bounds.Y + 50, room.Bounds.Y + room.Bounds.Height - 50);
+                } while (Vector2.Distance(new Vector2(crateX, crateY), room.Center) < 100);
                 
-                _weavingAltar.Position = altarPosition;
+                DestructibleCrate crate = new DestructibleCrate(
+                    new Vector2(crateX, crateY),
+                    crateTexture,
+                    1); // Always set health to 1 for easy destruction
                 
-                Console.WriteLine($"Positioned weaving altar at {altarPosition} in room {altarRoomIndex}");
+                _crates.Add(crate);
+            }
+            
+            Console.WriteLine($"Spawned {cratesInRoom} crates in room at {room.Bounds}");
+            
+            // Register all crate bounds as obstacles
+            UpdateCrateObstacles();
+        }
+        
+        /// <summary>
+        /// Updates the dungeon's obstacle list with the bounds of all non-destroyed crates
+        /// </summary>
+        private void UpdateCrateObstacles()
+        {
+            // Clear existing obstacle bounds
+            _currentDungeon.ClearObstacleBounds();
+            
+            // Add bounds of all non-destroyed crates
+            foreach (var crate in _crates)
+            {
+                if (!crate.IsDestroyed)
+                {
+                    _currentDungeon.AddObstacleBound(crate.Bounds);
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Places spike traps in a room.
+        /// </summary>
+        /// <param name="room">The room to place spike traps in.</param>
+        private void SpawnSpikeTrapsInRoom(Room room)
+        {
+            // Skip spike traps in starting room for player safety
+            if (room == _currentDungeon.StartingRoom)
+            {
+                return;
+            }
+            
+            // Retrieve spike trap textures
+            Texture2D spikeTrapsArmedTexture = null;
+            Texture2D spikeTrapsDisarmedTexture = null;
+            
+            try
+            {
+                spikeTrapsArmedTexture = Content.Load<Texture2D>("SpikeTrapArmedSprite");
+                spikeTrapsDisarmedTexture = Content.Load<Texture2D>("SpikeTrapDisarmedSprite");
+            }
+            catch
+            {
+                // Create placeholders if they don't exist yet
+                spikeTrapsArmedTexture = new Texture2D(GraphicsDevice, 32, 32);
+                Color[] armedColorData = new Color[1024];
+                for (int i = 0; i < 1024; i++)
+                {
+                    int x = i % 32;
+                    int y = i / 32;
+                    if (x < 3 || x > 28 || y < 3 || y > 28 || (x >= 13 && x <= 18 && y >= 13 && y <= 18))
+                        armedColorData[i] = Color.Red;
+                    else
+                        armedColorData[i] = Color.DarkRed;
+                }
+                spikeTrapsArmedTexture.SetData(armedColorData);
+                
+                spikeTrapsDisarmedTexture = new Texture2D(GraphicsDevice, 32, 32);
+                Color[] disarmedColorData = new Color[1024];
+                for (int i = 0; i < 1024; i++) disarmedColorData[i] = Color.DarkGray;
+                spikeTrapsDisarmedTexture.SetData(disarmedColorData);
+            }
+            
+            // Decide how many traps to spawn based on room size
+            int maxTraps = Math.Max(1, room.Bounds.Width * room.Bounds.Height / 300000); // 1-3 traps based on room size
+            int trapsInRoom = new Random().Next(1, maxTraps + 1);
+            
+            for (int i = 0; i < trapsInRoom; i++)
+            {
+                // Random position within the room
+                int trapX = new Random().Next(room.Bounds.X + 50, room.Bounds.X + room.Bounds.Width - 50);
+                int trapY = new Random().Next(room.Bounds.Y + 50, room.Bounds.Y + room.Bounds.Height - 50);
+                
+                // Randomize trap timings
+                float activeDuration = 0.5f + (float)new Random().NextDouble() * 1.0f; // 0.5 to 1.5 seconds
+                float cooldownDuration = 1.0f + (float)new Random().NextDouble() * 2.0f; // 1 to 3 seconds
+                
+                SpikeTrap trap = new SpikeTrap(
+                    new Vector2(trapX, trapY),
+                    spikeTrapsArmedTexture,
+                    spikeTrapsDisarmedTexture);
+                
+                trap.ActiveDuration = activeDuration;
+                trap.CooldownDuration = cooldownDuration;
+                
+                _spikeTraps.Add(trap);
+            }
+            
+            Console.WriteLine($"Spawned {trapsInRoom} spike traps in room at {room.Bounds}");
+        }
+        
+        /// <summary>
+        /// Places a door at the entrance to a room.
+        /// </summary>
+        /// <param name="room">The room to place a door for.</param>
+        private void PlaceDoorToRoom(Room room)
+        {
+            // Retrieve door textures
+            Texture2D doorLockedTexture = null;
+            Texture2D doorUnlockedTexture = null;
+            
+            try
+            {
+                doorLockedTexture = Content.Load<Texture2D>("DoorLockedSprite");
+                doorUnlockedTexture = Content.Load<Texture2D>("DoorUnlockedSprite");
+            }
+            catch
+            {
+                // Create placeholders if they don't exist yet
+                doorLockedTexture = new Texture2D(GraphicsDevice, 32, 32);
+                Color[] lockedColorData = new Color[1024];
+                for (int i = 0; i < 1024; i++)
+                {
+                    int x = i % 32;
+                    int y = i / 32;
+                    if (x >= 13 && x <= 19 && y >= 13 && y <= 19) lockedColorData[i] = Color.Gold;
+                    else lockedColorData[i] = Color.Brown;
+                }
+                doorLockedTexture.SetData(lockedColorData);
+                
+                doorUnlockedTexture = new Texture2D(GraphicsDevice, 32, 32);
+                Color[] unlockedColorData = new Color[1024];
+                for (int i = 0; i < 1024; i++) unlockedColorData[i] = Color.SandyBrown;
+                doorUnlockedTexture.SetData(unlockedColorData);
+            }
+            
+            // Find a random corridor connecting to this room
+            // This is a simplified approach - in a real implementation, you would analyze
+            // the dungeon structure to find actual corridor-room connections
+            
+            // For now, we'll place the door at a position near the room edge
+            Random random = new Random();
+            int side = random.Next(4); // 0 = top, 1 = right, 2 = bottom, 3 = left
+            
+            Vector2 doorPosition;
+            switch (side)
+            {
+                case 0: // Top
+                    doorPosition = new Vector2(
+                        room.Bounds.X + room.Bounds.Width / 2,
+                        room.Bounds.Y + 20);
+                    break;
+                case 1: // Right
+                    doorPosition = new Vector2(
+                        room.Bounds.X + room.Bounds.Width - 20,
+                        room.Bounds.Y + room.Bounds.Height / 2);
+                    break;
+                case 2: // Bottom
+                    doorPosition = new Vector2(
+                        room.Bounds.X + room.Bounds.Width / 2,
+                        room.Bounds.Y + room.Bounds.Height - 20);
+                    break;
+                case 3: // Left
+                default:
+                    doorPosition = new Vector2(
+                        room.Bounds.X + 20,
+                        room.Bounds.Y + room.Bounds.Height / 2);
+                    break;
+            }
+            
+            // Adjust for door sprite center
+            doorPosition.X -= (doorLockedTexture?.Width ?? 0) / 2;
+            doorPosition.Y -= (doorLockedTexture?.Height ?? 0) / 2;
+            
+            Door door = new Door(doorPosition, doorLockedTexture, doorUnlockedTexture);
+            _doors.Add(door);
+            
+            Console.WriteLine($"Placed door to {room.Type} room at {doorPosition}");
+            
+            // Also place a key somewhere in the dungeon in a non-treasure room
+            SpawnKeyInRandomRoom(room);
+        }
+        
+        /// <summary>
+        /// Spawns a key in a random room (not the specified room).
+        /// </summary>
+        /// <param name="excludedRoom">The room that should not contain the key.</param>
+        private void SpawnKeyInRandomRoom(Room excludedRoom)
+        {
+            // Retrieve key texture
+            Texture2D keyTexture = null;
+            
+            try
+            {
+                keyTexture = Content.Load<Texture2D>("KeySprite");
+            }
+            catch
+            {
+                // Create a placeholder if it doesn't exist yet
+                keyTexture = new Texture2D(GraphicsDevice, 16, 16);
+                Color[] colorData = new Color[256];
+                for (int i = 0; i < 256; i++) colorData[i] = Color.Gold;
+                keyTexture.SetData(colorData);
+            }
+            
+            // Find a valid room to place the key (not the starting room or the excluded room)
+            var availableRooms = new List<Room>(_currentDungeon.Rooms);
+            availableRooms.Remove(_currentDungeon.StartingRoom);
+            availableRooms.Remove(excludedRoom);
+            
+            if (availableRooms.Count > 0)
+            {
+                // Choose a random room for the key
+                Room keyRoom = availableRooms[new Random().Next(availableRooms.Count)];
+                
+                // Random position within the room
+                int keyX = new Random().Next(keyRoom.Bounds.X + 100, keyRoom.Bounds.X + keyRoom.Bounds.Width - 100);
+                int keyY = new Random().Next(keyRoom.Bounds.Y + 100, keyRoom.Bounds.Y + keyRoom.Bounds.Height - 100);
+                
+                // Create a key item
+                LootItem keyItem = new LootItem(new Vector2(keyX, keyY), keyTexture, LootType.Key);
+                _lootItems.Add(keyItem);
+                
+                Console.WriteLine($"Placed key in room at position {keyX}, {keyY}");
             }
         }
 
@@ -479,210 +1032,405 @@ namespace AetheriumDepths
         {
             float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
             
-            // Get input actions from the input manager
-            bool isAttackPressed = _inputManager.IsActionJustPressed(InputManager.GameAction.Attack);
-            bool isDodgePressed = _inputManager.IsActionJustPressed(InputManager.GameAction.Dodge);
-            bool isInteractPressed = _inputManager.IsActionJustPressed(InputManager.GameAction.Interact);
-            bool isSpellPressed = _inputManager.IsActionJustPressed(InputManager.GameAction.UseSpell);
-            bool isRegeneratePressed = Keyboard.GetState().IsKeyDown(Keys.R);
+            // Update player
+            _player.Update(gameTime, _inputManager, _currentDungeon);
             
-            // Check for game regeneration
-            if (isRegeneratePressed)
+            // DEBUG: Press F1 to destroy all crates (test crate destruction)
+            if (Keyboard.GetState().IsKeyDown(Keys.F1))
             {
-                GenerateDungeon();
-                return;
-            }
-            
-            // Process input for player movement
-            Vector2 movementVector = _inputManager.GetMovementVector();
-            
-            // Update player position
-            _player.Move(movementVector, PlayerSpeed, deltaTime, _currentDungeon);
-            
-            // Update camera to follow player with smooth interpolation
-            _camera.MoveToTarget(_player.Position, CameraLerpFactor);
-            
-            // Update CombatManager
-            _combatManager.Update(deltaTime);
-            
-            // Update player state (attack cooldown, dodge duration, etc.)
-            _player.Update(deltaTime, _currentDungeon);
-            
-            // Process player attack
-            if (isAttackPressed)
-            {
-                _player.Attack();
-            }
-            
-            // Process player dodge
-            if (isDodgePressed)
-            {
-                _player.Dodge();
-            }
-            
-            // Process spell casting
-            if (isSpellPressed)
-            {
-                _player.CastSpell();
-            }
-            
-            // Check for weaving altar interaction
-            if (isInteractPressed)
-            {
-                Rectangle playerBounds = _player.Bounds;
-                Rectangle altarBounds = _weavingAltar.Bounds;
-                
-                if (CollisionUtility.CheckAABBCollision(playerBounds, altarBounds))
+                foreach (var crate in _crates)
                 {
-                    Console.WriteLine("Interacting with Weaving Altar");
-                    
-                    // Check for specific buff selection key presses
-                    bool damageBuffSelected = Keyboard.GetState().IsKeyDown(Keys.D1);
-                    bool speedBuffSelected = Keyboard.GetState().IsKeyDown(Keys.D2);
-                    
-                    if (damageBuffSelected)
+                    if (!crate.IsDestroyed)
                     {
-                        bool success = _player.ActivateDamageBuff(AetheriumWeavingCost);
-                        if (success)
+                        bool wasDestroyed = crate.TakeDamage(100); // Ensure destruction
+                        if (wasDestroyed)
                         {
-                            Console.WriteLine($"Activated Damage Buff for {AetheriumWeavingCost} essence");
-                        }
-                        else
-                        {
-                            Console.WriteLine($"Not enough essence to activate Damage Buff. Need {AetheriumWeavingCost}.");
-                        }
-                    }
-                    else if (speedBuffSelected)
-                    {
-                        bool success = _player.ActivateSpeedBuff(AetheriumWeavingCost);
-                        if (success)
-                        {
-                            Console.WriteLine($"Activated Speed Buff for {AetheriumWeavingCost} essence");
-                        }
-                        else
-                        {
-                            Console.WriteLine($"Not enough essence to activate Speed Buff. Need {AetheriumWeavingCost}.");
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("Press 1 for Damage Buff or 2 for Speed Buff");
-                    }
-                }
-            }
-            
-            // Update enemies
-            foreach (Enemy enemy in _enemies)
-            {
-                if (enemy.IsActive)
-                {
-                    // Update enemy AI and position
-                    enemy.Update(_player.Position, deltaTime, _currentDungeon);
-                    
-                    // Check for enemy touch damage
-                    if (CollisionUtility.CheckAABBCollision(_player.Bounds, enemy.Bounds))
-                    {
-                        bool wasHit = _combatManager.ApplyPlayerDamage();
-                        if (wasHit && _player.CurrentHealth <= 0)
-                        {
-                            // Player died, transition to game over state
-                            _stateManager.ChangeState(StateManager.GameState.GameOver);
-                            return;
-                        }
-                    }
-                    
-                    // Check for enemy attack hitbox damage
-                    if (enemy.IsAttacking && 
-                        CollisionUtility.CheckAABBCollision(_player.Bounds, enemy.AttackHitbox))
-                    {
-                        bool wasHit = _combatManager.ApplyPlayerDamage();
-                        if (wasHit && _player.CurrentHealth <= 0)
-                        {
-                            // Player died, transition to game over state
-                            _stateManager.ChangeState(StateManager.GameState.GameOver);
-                            return;
-                        }
-                    }
-                    
-                    // Check for ranged enemy projectile collisions
-                    if (enemy is RangedEnemy rangedEnemy)
-                    {
-                        foreach (var projectile in rangedEnemy.GetActiveProjectiles())
-                        {
-                            if (projectile.IsActive && 
-                                CollisionUtility.CheckAABBCollision(_player.Bounds, projectile.Bounds))
+                            Console.WriteLine("DEBUG: Crate destroyed by F1 key!");
+                            
+                            if (crate.ShouldDropLoot())
                             {
-                                bool wasHit = _combatManager.ApplyDamage(enemy, _player, projectile.Damage);
-                                projectile.Deactivate();
+                                _lootItems.Add(new LootItem(
+                                    crate.Position,
+                                    _healthPotionTexture,
+                                    LootType.HealthPotion));
                                 
-                                if (wasHit && _player.CurrentHealth <= 0)
-                                {
-                                    // Player died, transition to game over state
-                                    _stateManager.ChangeState(StateManager.GameState.GameOver);
-                                    return;
-                                }
+                                _popupMessage = "Crate destroyed by debug key! Found a Health Potion!";
+                                _popupTimer = POPUP_DURATION;
                             }
                         }
                     }
                 }
+                // Update crate obstacles
+                UpdateCrateObstacles();
             }
             
-            // Process player projectile collisions
-            foreach (var projectile in _player.GetActiveProjectiles())
+            // Transfer player's projectiles to the game's projectile list
+            List<Projectile> playerProjectiles = _player.GetActiveProjectiles();
+            foreach (var projectile in playerProjectiles)
             {
-                if (projectile.IsActive)
+                if (!_projectiles.Contains(projectile))
                 {
-                    foreach (Enemy enemy in _enemies)
-                    {
-                        if (enemy.IsActive && 
-                            CollisionUtility.CheckAABBCollision(enemy.Bounds, projectile.Bounds))
-                        {
-                            _combatManager.ApplyDamage(_player, enemy, projectile.Damage);
-                            projectile.Deactivate();
-                            break; // Only hit one enemy per projectile
-                        }
-                    }
+                    _projectiles.Add(projectile);
+                    Console.WriteLine("Added player projectile to game projectiles");
                 }
             }
             
-            // Check for player attack collisions
+            // Check for player attacks hitting crates
             if (_player.IsAttacking)
             {
-                foreach (Enemy enemy in _enemies)
+                // Check for player attacks hitting enemies
+                for (int i = _enemies.Count - 1; i >= 0; i--)
                 {
-                    if (enemy.IsActive)
+                    if (_enemies[i].IsActive && _player.AttackHitbox.Intersects(_enemies[i].Bounds))
                     {
-                        if (CollisionUtility.CheckAABBCollision(enemy.Bounds, _player.AttackHitbox))
+                        // Apply damage to the enemy
+                        _combatManager.ApplyPlayerAttackDamage(_enemies[i]);
+                        Console.WriteLine($"Player hit enemy with melee attack!");
+                    }
+                }
+                
+                for (int i = _crates.Count - 1; i >= 0; i--)
+                {
+                    if (!_crates[i].IsDestroyed && _player.AttackHitbox.Intersects(_crates[i].Bounds))
+                    {
+                        bool wasDestroyed = _crates[i].TakeDamage(AttackDamage);
+                        if (wasDestroyed && _crates[i].ShouldDropLoot())
                         {
-                            _combatManager.ApplyPlayerAttackDamage(enemy);
-                            _player.DeactivateAttack(); // Prevent multiple hits with one attack
-                            break; // Only damage one enemy per attack
+                            // Spawn loot when crate is destroyed
+                            int lootChance = new Random().Next(100);
+                            if (lootChance < 70) // 70% chance of health potion
+                            {
+                                _lootItems.Add(new LootItem(
+                                    _crates[i].Position,
+                                    _healthPotionTexture,
+                                    LootType.HealthPotion));
+                                    
+                                _popupMessage = "Crate destroyed! Found a Health Potion!";
+                                _popupTimer = POPUP_DURATION;
+                            }
+                        }
+                        
+                        // Update obstacle list when a crate is damaged (it might be destroyed)
+                        UpdateCrateObstacles();
+                    }
+                }
+            }
+            
+            // Update camera to follow player with smooth interpolation
+            _camera.MoveToTarget(_player.Position, CameraLerpFactor);
+            
+            // Update enemies
+            for (int i = _enemies.Count - 1; i >= 0; i--)
+            {
+                if (_enemies[i].IsActive)
+                {
+                    _enemies[i].Update(_player.Position, deltaTime, _currentDungeon);
+                    
+                    // Check for enemy-player collision for touch damage
+                    // Only if player is not invincible and enemy isn't attacking (to avoid double damage when attacking)
+                    if (!_player.IsInvincible && _damageInvincibilityTimer <= 0 && _enemies[i].Bounds.Intersects(_player.Bounds))
+                    {
+                        // Apply enemy touch damage to player
+                        _player.TakeDamage(EnemyTouchDamage);
+                        
+                        // Set player damage invincibility
+                        _damageInvincibilityTimer = DamageInvincibilityDuration;
+                        
+                        Console.WriteLine($"Player touched by enemy! Took {EnemyTouchDamage} damage.");
+                    }
+                    
+                    // Check for enemy attacks hitting player
+                    if (_enemies[i].IsAttacking && !_player.IsInvincible && _damageInvincibilityTimer <= 0 && 
+                        _enemies[i].AttackHitbox.Intersects(_player.Bounds))
+                    {
+                        // Apply enemy attack damage to player
+                        _player.TakeDamage(EnemyTouchDamage);
+                        
+                        // Set player damage invincibility
+                        _damageInvincibilityTimer = DamageInvincibilityDuration;
+                        
+                        Console.WriteLine($"Player hit by enemy attack! Took {EnemyTouchDamage} damage.");
+                    }
+                }
+                else
+                {
+                    _enemies.RemoveAt(i);
+                }
+            }
+            
+            // Update projectiles
+            for (int i = _projectiles.Count - 1; i >= 0; i--)
+            {
+                Projectile projectile = _projectiles[i];
+                
+                if (!projectile.IsActive)
+                {
+                    _projectiles.RemoveAt(i);
+                    continue;
+                }
+                
+                // Store the old position for collision detection
+                Vector2 oldPosition = projectile.Position;
+                
+                // Update projectile position
+                projectile.Update(gameTime, _currentDungeon);
+                
+                // For player projectiles, check all possible collisions
+                if (projectile.IsPlayerOwned)
+                {
+                    bool hitSomething = false;
+                    
+                    // DIRECT CRATE COLLISION CHECK - Check all crates first
+                    for (int j = 0; j < _crates.Count; j++)
+                    {
+                        if (!_crates[j].IsDestroyed)
+                        {
+                            // Calculate distance between projectile and crate center
+                            float distance = Vector2.Distance(
+                                projectile.Position,
+                                new Vector2(
+                                    _crates[j].Position.X + (_crates[j].Sprite?.Width ?? 0) / 2,
+                                    _crates[j].Position.Y + (_crates[j].Sprite?.Height ?? 0) / 2
+                                )
+                            );
+                            
+                            // Use a generous collision radius (half the crate size)
+                            float collisionRadius = Math.Max((_crates[j].Sprite?.Width ?? 0), (_crates[j].Sprite?.Height ?? 0)) / 2f;
+                            
+                            // Check if projectile is close enough to crate
+                            if (distance < collisionRadius)
+                            {
+                                // Force destroy the crate
+                                Console.WriteLine($"DIRECT HIT! Projectile at {projectile.Position} hit crate at {_crates[j].Position}, distance: {distance}");
+                                bool wasDestroyed = _crates[j].TakeDamage(100); // Ensure destruction
+                                
+                                if (wasDestroyed && _crates[j].ShouldDropLoot())
+                                {
+                                    // Spawn loot
+                                    _lootItems.Add(new LootItem(
+                                        _crates[j].Position,
+                                        _healthPotionTexture,
+                                        LootType.HealthPotion));
+                                    
+                                    _popupMessage = "Crate destroyed by spell! Found a Health Potion!";
+                                    _popupTimer = POPUP_DURATION;
+                                }
+                                
+                                // Update obstacle list
+                                UpdateCrateObstacles();
+                                
+                                // Deactivate projectile
+                                projectile.Deactivate();
+                                hitSomething = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // If didn't hit a crate, check enemies
+                    if (!hitSomething)
+                    {
+                        for (int j = 0; j < _enemies.Count; j++)
+                        {
+                            if (_enemies[j].IsActive && projectile.Bounds.Intersects(_enemies[j].Bounds))
+                            {
+                                // Damage the enemy
+                                _combatManager.ApplyDamageToEnemy(_enemies[j], projectile.Damage);
+                                Console.WriteLine($"Enemy hit by projectile! Took {projectile.Damage} damage!");
+                                
+                                // Deactivate the projectile
+                                projectile.Deactivate();
+                                hitSomething = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                // Handle enemy projectiles hitting player
+                else if (!projectile.IsPlayerOwned && !_player.IsInvincible && _damageInvincibilityTimer <= 0 && 
+                         projectile.Bounds.Intersects(_player.Bounds))
+                {
+                    // Player takes damage from enemy projectiles
+                    _player.TakeDamage(projectile.Damage);
+                    
+                    // Trigger invincibility
+                    _damageInvincibilityTimer = DamageInvincibilityDuration;
+                    
+                    // Deactivate the projectile
+                    projectile.Deactivate();
+                }
+            }
+            
+            // Update spike traps
+            foreach (var trap in _spikeTraps)
+            {
+                trap.Update(gameTime);
+                
+                // Check for player collision with active traps
+                if (trap.IsActive && !trap.IsEntityOnDamageCooldown(_player) && 
+                    trap.Bounds.Intersects(_player.Bounds) && !_player.IsInvincible)
+                {
+                    _player.TakeDamage(trap.Damage);
+                    trap.SetEntityDamageCooldown(_player);
+                    Console.WriteLine($"Player hit by spike trap! Took {trap.Damage} damage.");
+                }
+                
+                // Check for enemy collision with active traps
+                foreach (var enemy in _enemies)
+                {
+                    if (trap.IsActive && !trap.IsEntityOnDamageCooldown(enemy) &&
+                        trap.Bounds.Intersects(enemy.Bounds))
+                    {
+                        // Use combat manager to apply damage to enemy
+                        _combatManager.ApplyDamageToEnemy(enemy, trap.Damage);
+                        trap.SetEntityDamageCooldown(enemy);
+                        Console.WriteLine($"Enemy hit by spike trap! Took {trap.Damage} damage.");
+                    }
+                }
+            }
+            
+            // Check for treasure chest interaction
+            _isNearChest = false;
+            _nearbyChest = null;
+            
+            foreach (var chest in _treasureChests)
+            {
+                if (Vector2.Distance(_player.Position, chest.Position) < InteractionDistance)
+                {
+                    _isNearChest = true;
+                    _nearbyChest = chest;
+                    
+                    if (_inputManager.IsActionJustPressed(InputManager.GameAction.Interact))
+                    {
+                        if (chest.Open() && chest.ShouldDropLoot())
+                        {
+                            // Spawn multiple loot items when chest is opened
+                            // 1-3 health potions
+                            int potionCount = new Random().Next(1, 4);
+                            for (int i = 0; i < potionCount; i++)
+                            {
+                                float offsetX = (float)(new Random().NextDouble() * 60 - 30);
+                                float offsetY = (float)(new Random().NextDouble() * 60 - 30);
+                                Vector2 potionPos = new Vector2(chest.Position.X + offsetX, chest.Position.Y + offsetY);
+                                _lootItems.Add(new LootItem(potionPos, _healthPotionTexture, LootType.HealthPotion));
+                            }
+                            
+                            // Give some Aetherium Essence
+                            int essenceAmount = new Random().Next(5, 11); // 5-10 essence
+                            _player.AddAetheriumEssence(essenceAmount);
+                            
+                            // Show popup notification
+                            _popupMessage = $"Obtained {potionCount} Health Potion{(potionCount > 1 ? "s" : "")} and {essenceAmount} Aetherium Essence!";
+                            _popupTimer = POPUP_DURATION;
+                            
+                            Console.WriteLine($"Treasure chest opened! Found {potionCount} health potions and {essenceAmount} essence.");
                         }
                     }
                 }
             }
             
-            // Process loot item pickups
+            // Check for door interaction
+            foreach (var door in _doors)
+            {
+                if (door.IsLocked && 
+                    Vector2.Distance(_player.Position, door.Position) < InteractionDistance &&
+                    _inputManager.IsActionJustPressed(InputManager.GameAction.Interact))
+                {
+                    if (_player.KeyCount > 0)
+                    {
+                        _player.UseKey();
+                        door.Unlock();
+                        Console.WriteLine("Door unlocked with a key!");
+                    }
+                    else
+                    {
+                        Console.WriteLine("This door is locked. You need a key to unlock it.");
+                    }
+                }
+            }
+            
+            // Process loot collection
             for (int i = _lootItems.Count - 1; i >= 0; i--)
             {
-                var lootItem = _lootItems[i];
-                if (lootItem.IsActive && 
-                    CollisionUtility.CheckAABBCollision(_player.Bounds, lootItem.Bounds))
+                LootItem item = _lootItems[i];
+                if (item.IsActive && item.Bounds.Intersects(_player.Bounds))
                 {
-                    // Apply loot item effect
-                    if (lootItem.Type == LootType.HealthPotion)
+                    // Process the item based on its type
+                    switch (item.Type)
                     {
-                        int healthBefore = _player.CurrentHealth;
-                        _player.TakeDamage(-LootItem.HealthPotionAmount); // Negative damage = healing
-                        Console.WriteLine($"Player picked up Health Potion. Health: {healthBefore} -> {_player.CurrentHealth}");
+                        case LootType.HealthPotion:
+                            // Health potions restore health
+                            _player.RestoreHealth(LootItem.HealthPotionAmount);
+                            _popupMessage = $"Obtained Health Potion! Restored {LootItem.HealthPotionAmount} health.";
+                            _popupTimer = POPUP_DURATION;
+                            Console.WriteLine($"Collected health potion. Restored {LootItem.HealthPotionAmount} health!");
+                            break;
+                            
+                        case LootType.Key:
+                            // Keys are added to the player's inventory
+                            _player.AddKey();
+                            _popupMessage = "Obtained Key!";
+                            _popupTimer = POPUP_DURATION;
+                            Console.WriteLine("Collected a key!");
+                            break;
                     }
                     
-                    // Mark as collected
-                    lootItem.Collect();
-                    
-                    // Remove from list
+                    // Mark the item as collected
+                    item.Collect();
                     _lootItems.RemoveAt(i);
                 }
+            }
+            
+            // Check for interaction with weaving altar
+            if (Vector2.Distance(_player.Position, _weavingAltar.Position) < InteractionDistance)
+            {
+                if (_inputManager.IsActionJustPressed(InputManager.GameAction.Interact))
+                {
+                    // Show the interaction prompt for weaving altar
+                    _isNearAltar = true;
+                    
+                    // Check if player is pressing one of the buff activation keys
+                    if (_inputManager.CheckKeyJustPressed(Keys.D1) && _player.AetheriumEssence >= AetheriumWeavingCost)
+                    {
+                        if (_player.ActivateDamageBuff(AetheriumWeavingCost))
+                        {
+                            Console.WriteLine("Damage buff activated!");
+                        }
+                    }
+                    else if (_inputManager.CheckKeyJustPressed(Keys.D2) && _player.AetheriumEssence >= AetheriumWeavingCost)
+                    {
+                        if (_player.ActivateSpeedBuff(AetheriumWeavingCost))
+                        {
+                            Console.WriteLine("Speed buff activated!");
+                        }
+                    }
+                }
+            }
+            else
+            {
+                _isNearAltar = false;
+            }
+            
+            // Update combat-related timers
+            if (_damageInvincibilityTimer > 0)
+            {
+                _damageInvincibilityTimer -= deltaTime;
+            }
+            
+            // Update popup timer
+            if (_popupTimer > 0)
+            {
+                _popupTimer -= deltaTime;
+                if (_popupTimer <= 0)
+                {
+                    _popupMessage = "";
+                }
+            }
+            
+            // Process game state transitions
+            if (_player.CurrentHealth <= 0)
+            {
+                _stateManager.ChangeState(StateManager.GameState.GameOver);
             }
         }
 
@@ -711,18 +1459,56 @@ namespace AetheriumDepths
 
         private void DrawGameplay(GameTime gameTime)
         {
-            // Start drawing the game world with camera transform
+            GraphicsDevice.Clear(Color.Black);
+            
+            // Begin sprite batch with camera transformation for world rendering
             _spriteBatch.Begin(
-                SpriteSortMode.Deferred, 
-                BlendState.AlphaBlend, 
-                SamplerState.PointClamp, 
-                null, 
-                null, 
-                null, 
-                _camera.GetTransformMatrix()); // Apply camera transform
-                
-            // Draw dungeon
+                SpriteSortMode.Deferred,
+                BlendState.AlphaBlend,
+                SamplerState.PointClamp,
+                DepthStencilState.None,
+                RasterizerState.CullCounterClockwise,
+                null,
+                _camera.GetTransformMatrix());
+            
+            // Draw the dungeon
             DrawDungeon();
+            
+            // Draw environmental elements
+            
+            // Draw spike traps
+            foreach (var trap in _spikeTraps)
+            {
+                trap.Draw(_spriteBatch);
+            }
+            
+            // Draw crates
+            foreach (var crate in _crates)
+            {
+                crate.Draw(_spriteBatch);
+            }
+            
+            // Draw treasure chests
+            foreach (var chest in _treasureChests)
+            {
+                chest.Draw(_spriteBatch);
+            }
+            
+            // Draw doors
+            foreach (var door in _doors)
+            {
+                door.Draw(_spriteBatch);
+            }
+            
+            // Draw weaving altar
+            if (_weavingAltar != null)
+            {
+                _spriteBatch.Draw(
+                    _weavingAltar.Sprite,
+                    _weavingAltar.Position,
+                    null,
+                    Color.White);
+            }
             
             // Draw loot items
             foreach (var lootItem in _lootItems)
@@ -730,8 +1516,11 @@ namespace AetheriumDepths
                 lootItem.Draw(_spriteBatch);
             }
             
-            // Draw the weaving altar
-            _weavingAltar.Draw(_spriteBatch);
+            // Draw projectiles
+            foreach (var projectile in _projectiles)
+            {
+                projectile.Draw(_spriteBatch);
+            }
             
             // Draw enemies
             foreach (Enemy enemy in _enemies)
@@ -1068,19 +1857,19 @@ namespace AetheriumDepths
                             enemyDotSize,
                             enemyDotSize);
                             
-                        // Use different colors for enemy types
-                        Color enemyColor = Color.Red; // Default red for basic enemies
-                        
-                        if (enemy is RangedEnemy)
-                        {
-                            enemyColor = Color.OrangeRed; // Orange for ranged enemies
-                        }
-                        else if (enemy is FastEnemy)
-                        {
-                            enemyColor = Color.Lime; // Green for fast enemies
-                        }
-                        
-                        _spriteBatch.Draw(_debugTexture, enemyDot, enemyColor);
+                            // Use different colors for enemy types
+                            Color enemyColor = Color.Red; // Default red for basic enemies
+                            
+                            if (enemy is RangedEnemy)
+                            {
+                                enemyColor = Color.OrangeRed; // Orange for ranged enemies
+                            }
+                            else if (enemy is FastEnemy)
+                            {
+                                enemyColor = Color.Lime; // Green for fast enemies
+                            }
+                            
+                            _spriteBatch.Draw(_debugTexture, enemyDot, enemyColor);
                     }
                 }
                 
@@ -1095,7 +1884,7 @@ namespace AetheriumDepths
             }
             
             // If in altar range, draw interaction prompt
-            if (CollisionUtility.CheckAABBCollision(_player.Bounds, _weavingAltar.Bounds))
+            if (_isNearAltar)
             {
                 // Draw interaction prompt panel
                 Rectangle promptBackground = new Rectangle(
@@ -1124,6 +1913,34 @@ namespace AetheriumDepths
                 }
             }
             
+            // If near a chest, draw interaction prompt
+            if (_isNearChest && _nearbyChest != null)
+            {
+                // Draw interaction prompt panel
+                Rectangle promptBackground = new Rectangle(
+                    GraphicsDevice.Viewport.Width / 2 - 150,
+                    GraphicsDevice.Viewport.Height - 100,
+                    300,
+                    70);
+                _spriteBatch.Draw(_debugTexture, promptBackground, new Color((byte)0, (byte)0, (byte)0, (byte)180));
+                
+                // Draw interaction prompt text
+                if (_gameFont != null)
+                {
+                    string promptText = _nearbyChest.IsOpen 
+                        ? "Treasure Chest is Open" 
+                        : "Press E to Open Treasure Chest";
+                    
+                    Vector2 textSize = _gameFont.MeasureString(promptText);
+                    Vector2 textPosition = new Vector2(
+                        promptBackground.X + (promptBackground.Width - textSize.X) / 2,
+                        promptBackground.Y + 25);
+                    
+                    Color textColor = _nearbyChest.IsOpen ? Color.Gray : Color.Gold;
+                    _spriteBatch.DrawString(_gameFont, promptText, textPosition, textColor);
+                }
+            }
+            
             // Draw spell casting prompt in bottom right
             if (_gameFont != null)
             {
@@ -1136,6 +1953,36 @@ namespace AetheriumDepths
                 // Draw with appropriate color based on spell readiness
                 Color promptColor = _player.IsSpellReady ? Color.Cyan : Color.Gray;
                 _spriteBatch.DrawString(_gameFont, spellPrompt, promptPos, promptColor);
+            }
+            
+            // Draw popup notification if active
+            if (_popupTimer > 0 && !string.IsNullOrEmpty(_popupMessage) && _gameFont != null)
+            {
+                // Calculate popup position (center of screen, top third)
+                Vector2 textSize = _gameFont.MeasureString(_popupMessage);
+                Vector2 position = new Vector2(
+                    (GraphicsDevice.Viewport.Width - textSize.X) / 2,
+                    GraphicsDevice.Viewport.Height / 3);
+                
+                // Draw background panel
+                Rectangle panel = new Rectangle(
+                    (int)position.X - 20,
+                    (int)position.Y - 10,
+                    (int)textSize.X + 40,
+                    (int)textSize.Y + 20);
+                
+                _spriteBatch.Draw(_debugTexture, panel, new Color((byte)0, (byte)0, (byte)0, (byte)200));
+                
+                // Calculate fade effect for last second
+                float alpha = 1.0f;
+                if (_popupTimer < 1.0f)
+                {
+                    alpha = _popupTimer; // Linear fade out during last second
+                }
+                
+                // Draw text with fade effect
+                Color textColor = new Color(Color.Gold.R, Color.Gold.G, Color.Gold.B, (byte)(alpha * 255));
+                _spriteBatch.DrawString(_gameFont, _popupMessage, position, textColor);
             }
         }
         

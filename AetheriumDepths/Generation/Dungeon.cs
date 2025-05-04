@@ -29,6 +29,11 @@ namespace AetheriumDepths.Generation
         /// The leaf nodes of the BSP tree.
         /// </summary>
         public List<BSPNode> LeafNodes { get; set; }
+        
+        /// <summary>
+        /// List of obstacle bounds that block movement
+        /// </summary>
+        private List<Rectangle> _obstacleBounds = new List<Rectangle>();
 
         /// <summary>
         /// Creates a new dungeon.
@@ -72,6 +77,32 @@ namespace AetheriumDepths.Generation
             // Add the corridor segments
             Corridors.Add(horizontalSegment);
             Corridors.Add(verticalSegment);
+        }
+        
+        /// <summary>
+        /// Add obstacle bounds to be considered for collision detection
+        /// </summary>
+        /// <param name="obstacleBounds">List of obstacle rectangles</param>
+        public void SetObstacleBounds(List<Rectangle> obstacleBounds)
+        {
+            _obstacleBounds = obstacleBounds ?? new List<Rectangle>();
+        }
+        
+        /// <summary>
+        /// Add a single obstacle bound to be considered for collision detection
+        /// </summary>
+        /// <param name="obstacleBound">Obstacle rectangle to add</param>
+        public void AddObstacleBound(Rectangle obstacleBound)
+        {
+            _obstacleBounds.Add(obstacleBound);
+        }
+        
+        /// <summary>
+        /// Clear all obstacle bounds
+        /// </summary>
+        public void ClearObstacleBounds()
+        {
+            _obstacleBounds.Clear();
         }
 
         /// <summary>
@@ -158,7 +189,16 @@ namespace AetheriumDepths.Generation
                 
                 // If all corners are valid, we can return early
                 if (topLeftValid && topRightValid && bottomLeftValid && bottomRightValid)
-                    return true;
+                    break;
+            }
+            
+            // Check if the proposed bounds collide with any obstacles
+            foreach (Rectangle obstacleBound in _obstacleBounds)
+            {
+                if (proposedBounds.Intersects(obstacleBound))
+                {
+                    return false; // Movement is invalid if there's an obstacle in the way
+                }
             }
             
             // Movement is valid only if all corners are within some walkable area

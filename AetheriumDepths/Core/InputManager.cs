@@ -185,6 +185,16 @@ namespace AetheriumDepths.Core
             return _currentKeyboardState.IsKeyDown(key) && _previousKeyboardState.IsKeyUp(key);
         }
 
+        /// <summary>
+        /// Checks if a specific key was just pressed (i.e., pressed this frame but not last frame).
+        /// </summary>
+        /// <param name="key">The key to check</param>
+        /// <returns>True if the key was just pressed</returns>
+        public bool CheckKeyJustPressed(Keys key)
+        {
+            return IsKeyJustPressed(key);
+        }
+
         private bool IsButtonJustPressed(Buttons button)
         {
             return _currentGamePadState.IsButtonDown(button) && _previousGamePadState.IsButtonUp(button);

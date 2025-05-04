@@ -87,6 +87,35 @@ namespace AetheriumDepths.Generation
                     dungeon.Rooms.Remove(centerRoom);
                     dungeon.Rooms.Insert(0, centerRoom);
                 }
+                
+                // Designate the first room as the starting room
+                dungeon.Rooms[0].Type = RoomType.Start;
+            }
+            
+            // Designate a treasure room (not the starting room)
+            if (dungeon.Rooms.Count > 1)
+            {
+                // Pick a room that's not the starting room and not adjacent to it for the treasure room
+                // We'll use a simple approach: pick the farthest room from the starting room
+                Room startingRoom = dungeon.Rooms[0];
+                Room treasureRoom = null;
+                float maxDistance = 0;
+                
+                for (int i = 1; i < dungeon.Rooms.Count; i++)
+                {
+                    float distance = Vector2.Distance(startingRoom.Center, dungeon.Rooms[i].Center);
+                    if (distance > maxDistance)
+                    {
+                        maxDistance = distance;
+                        treasureRoom = dungeon.Rooms[i];
+                    }
+                }
+                
+                if (treasureRoom != null)
+                {
+                    treasureRoom.Type = RoomType.Treasure;
+                    Console.WriteLine("Designated a treasure room!");
+                }
             }
             
             return dungeon;

@@ -12,7 +12,7 @@ namespace AetheriumDepths.Entities
         /// <summary>
         /// Current position of the projectile.
         /// </summary>
-        public Vector2 Position { get; private set; }
+        public Vector2 Position { get; set; }
         
         /// <summary>
         /// Direction and speed vector of the projectile.
@@ -49,6 +49,11 @@ namespace AetheriumDepths.Entities
         /// Used to prevent friendly fire.
         /// </summary>
         public bool IsPlayerProjectile { get; private set; }
+        
+        /// <summary>
+        /// Alias for IsPlayerProjectile for compatibility.
+        /// </summary>
+        public bool IsPlayerOwned => IsPlayerProjectile;
         
         /// <summary>
         /// Current rotation of the projectile in radians.
@@ -97,6 +102,17 @@ namespace AetheriumDepths.Entities
             {
                 _rotation = (float)System.Math.Atan2(direction.Y, direction.X);
             }
+        }
+        
+        /// <summary>
+        /// Updates the projectile's position and checks for out-of-bounds.
+        /// </summary>
+        /// <param name="gameTime">Game time information for frame-rate independent movement.</param>
+        /// <param name="dungeon">The current dungeon for collision detection.</param>
+        public void Update(GameTime gameTime, Dungeon dungeon)
+        {
+            float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+            Update(deltaTime, dungeon);
         }
         
         /// <summary>

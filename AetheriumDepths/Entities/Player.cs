@@ -173,6 +173,11 @@ namespace AetheriumDepths.Entities
         private Texture2D _projectileTexture;
 
         /// <summary>
+        /// Number of keys the player has collected.
+        /// </summary>
+        public int KeyCount { get; private set; } = 0;
+
+        /// <summary>
         /// Creates a new player at the specified position.
         /// </summary>
         /// <param name="position">The initial position of the player.</param>
@@ -286,13 +291,43 @@ namespace AetheriumDepths.Entities
         }
 
         /// <summary>
-        /// Updates the player's state, including attack, dodge, and buff timers.
+        /// Updates the player state and handles input.
         /// </summary>
-        /// <param name="deltaTime">Time elapsed since the last update.</param>
-        /// <param name="dungeon">The current dungeon for collision detection.</param>
-        public void Update(float deltaTime, Dungeon dungeon)
+        /// <param name="gameTime">The game time information.</param>
+        /// <param name="inputManager">The input manager.</param>
+        /// <param name="dungeon">The current dungeon for movement validation.</param>
+        public void Update(GameTime gameTime, Core.InputManager inputManager, Generation.Dungeon dungeon)
         {
-            // Update attack timer if an attack is active
+            float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+            
+            // Handle movement input
+            Vector2 movementVector = inputManager.GetMovementVector();
+            Move(movementVector, 200f, deltaTime, dungeon); // 200f is PlayerSpeed
+            
+            // Handle attack input
+            if (inputManager.IsActionJustPressed(Core.InputManager.GameAction.Attack))
+            {
+                Attack();
+            }
+            
+            // Handle dodge input
+            if (inputManager.IsActionJustPressed(Core.InputManager.GameAction.Dodge))
+            {
+                Dodge();
+            }
+            
+            // Handle spell input
+            if (inputManager.IsActionJustPressed(Core.InputManager.GameAction.UseSpell))
+            {
+                CastSpell();
+            }
+            
+            // Update active projectiles
+            UpdateProjectiles(deltaTime, dungeon);
+            
+            // Update timers
+            
+            // Attack timer
             if (IsAttacking)
             {
                 _attackTimer -= deltaTime;
@@ -302,7 +337,7 @@ namespace AetheriumDepths.Entities
                 }
             }
             
-            // Update dodge timer if a dodge is active
+            // Dodge timer
             if (IsDodging)
             {
                 _dodgeTimer -= deltaTime;
@@ -312,52 +347,59 @@ namespace AetheriumDepths.Entities
                 }
             }
             
-            // Update damage buff duration
+            // Spell cooldown timer
+            if (_spellCooldownTimer > 0f)
+            {
+                _spellCooldownTimer -= deltaTime;
+            }
+            
+            // Buff durations
             if (HasDamageBuff)
             {
                 _damageBuffDuration -= deltaTime;
                 if (_damageBuffDuration <= 0f)
                 {
                     HasDamageBuff = false;
+                    Console.WriteLine("Damage buff expired");
                 }
             }
             
-            // Update speed buff duration
             if (HasSpeedBuff)
             {
                 _speedBuffDuration -= deltaTime;
                 if (_speedBuffDuration <= 0f)
                 {
                     HasSpeedBuff = false;
+                    Console.WriteLine("Speed buff expired");
                 }
             }
             
-            // Update spell cooldown timer
-            if (_spellCooldownTimer > 0f)
-            {
-                _spellCooldownTimer -= deltaTime;
-                if (_spellCooldownTimer < 0f)
-                {
-                    _spellCooldownTimer = 0f;
-                }
-            }
-            
-            // Gradually regenerate mana over time (1 mana per second)
+            // Mana regeneration
             if (CurrentMana < MaxMana)
             {
-                CurrentMana = Math.Min(MaxMana, CurrentMana + (int)(deltaTime));
+                const float manaRegenRate = 5f; // Mana points per second
+                CurrentMana = Math.Min(MaxMana, CurrentMana + (int)(manaRegenRate * deltaTime));
             }
-            
-            // Update projectiles
+        }
+        
+        /// <summary>
+        /// Updates all active projectiles.
+        /// </summary>
+        /// <param name="deltaTime">Time elapsed since the last update.</param>
+        /// <param name="dungeon">The current dungeon for collision detection.</param>
+        private void UpdateProjectiles(float deltaTime, Generation.Dungeon dungeon)
+        {
             for (int i = _activeProjectiles.Count - 1; i >= 0; i--)
             {
-                _activeProjectiles[i].Update(deltaTime, dungeon);
+                Projectile projectile = _activeProjectiles[i];
                 
-                // Remove inactive projectiles
-                if (!_activeProjectiles[i].IsActive)
+                if (!projectile.IsActive)
                 {
                     _activeProjectiles.RemoveAt(i);
+                    continue;
                 }
+                
+                projectile.Update(deltaTime, dungeon);
             }
         }
 
@@ -533,12 +575,12 @@ namespace AetheriumDepths.Entities
             // Create projectile at player's position offset toward the facing direction
             Vector2 projectileStart = Position + (LastMovementDirection * Sprite.Width / 2);
             
-            // Create the projectile with the player's damage (2 base damage)
+            // Create the projectile with the player's damage
             Projectile projectile = new Projectile(
                 projectileStart,
                 LastMovementDirection,
                 _projectileTexture,
-                2, // Base projectile damage
+                50, // Massive damage increase to ensure one-hit destruction
                 350f, // Projectile speed
                 true); // Mark as player projectile
                 
@@ -611,11 +653,11 @@ namespace AetheriumDepths.Entities
             // Draw the player sprite
             spriteBatch.Draw(Sprite, Position, color);
             
-            // Draw active projectiles
-            foreach (Projectile projectile in _activeProjectiles)
-            {
-                projectile.Draw(spriteBatch);
-            }
+            // Projectiles are now drawn by the main game loop
+            // foreach (Projectile projectile in _activeProjectiles)
+            // {
+            //     projectile.Draw(spriteBatch);
+            // }
         }
 
         /// <summary>
@@ -629,6 +671,49 @@ namespace AetheriumDepths.Entities
             {
                 spriteBatch.Draw(debugTexture, AttackHitbox, Color.Red * 0.5f);
             }
+        }
+
+        /// <summary>
+        /// Adds a key to the player's inventory.
+        /// </summary>
+        public void AddKey()
+        {
+            KeyCount++;
+            Console.WriteLine($"Player now has {KeyCount} keys");
+        }
+        
+        /// <summary>
+        /// Uses a key if one is available.
+        /// </summary>
+        /// <returns>True if a key was used; false if no keys are available.</returns>
+        public bool UseKey()
+        {
+            if (KeyCount > 0)
+            {
+                KeyCount--;
+                Console.WriteLine($"Used a key! {KeyCount} keys remaining");
+                return true;
+            }
+            
+            Console.WriteLine("No keys available!");
+            return false;
+        }
+
+        /// <summary>
+        /// Restores the player's health by the specified amount, up to the maximum health.
+        /// </summary>
+        /// <param name="amount">The amount of health to restore.</param>
+        public void RestoreHealth(int amount)
+        {
+            CurrentHealth += amount;
+            
+            // Clamp health to maximum
+            if (CurrentHealth > MaxHealth)
+            {
+                CurrentHealth = MaxHealth;
+            }
+            
+            Console.WriteLine($"Restored {amount} health. Current health: {CurrentHealth}/{MaxHealth}");
         }
     }
     
