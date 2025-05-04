@@ -1,0 +1,26 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Game Design Guidelines
+
+## Core Gameplay Loop
+1. **Prepare** in the Hub
+2. **Enter Dungeon** and explore randomly generated layouts
+3. **Combat** enemies in real-time using weapons, spells, and skills
+4. **Loot & Enhance** gear through the Aetherium Weaving system
+5. **Boss Battle** to progress deeper
+6. **Return to Hub** after death or victory
+7. Spend meta-currency for **Meta Progression**
+
+## Key Systems
+- **Aetherium Weaving**: The unique selling point allowing temporary augmentation of equipment and abilities during a run
+- **Randomly Generated Dungeons**: Different room types and increasing difficulty
+- **Real-Time Combat**: Top-down perspective with core actions (Move, Attack, Dodge, Use Spell/Skill)
+- **In-Run Progression**: Equipment, spells, and skills found during runs
+- **Meta Progression**: Persistent upgrades using Echo Shards in the Hub
+
+## Art Direction
+Clean 2D visuals with clear feedback for gameplay elements. UI design must be scalable for both PC and mobile screens.
+

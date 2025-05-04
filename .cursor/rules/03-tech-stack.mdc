@@ -1,0 +1,22 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Technology Stack Guidelines
+
+## Core Technologies
+- **Framework**: MonoGame - Used for cross-platform 2D game development
+- **Language**: C# - The primary programming language for all development
+- **IDE**: Cursor - The AI-enabled IDE used for development
+
+## Implementation Details
+- **Physics & Collision**: Custom implementation using Axis-Aligned Bounding Boxes (AABB)
+- **UI System**: Custom implementation using MonoGame's SpriteBatch
+- **Input Handling**: Must support both PC (Keyboard/Mouse/Controller) and Mobile (Touch)
+
+## Code Structure Principles
+- Maintain clear separation between game systems (combat, procedural generation, etc.)
+- Optimize for both PC and mobile performance
+- Implement platform-specific input handling while maintaining core game logic consistency
+

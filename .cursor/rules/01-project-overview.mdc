@@ -1,0 +1,20 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Aetherium Depths: Project Overview
+
+This project is a 2D top-down real-time action roguelike/dungeon crawler called "Aetherium Depths". The game features randomly generated dungeons, real-time combat, and a unique "Aetherium Weaving" system.
+
+## Core Documents
+- [game-design-document.md](mdc:game-design-document.md) - Contains the full game design, including gameplay loop, features, and art direction
+- [tech-stack.md](mdc:tech-stack.md) - Defines the technology choices for development
+
+## Target Platforms
+- PC (Windows, macOS, Linux)
+- Mobile (iOS, Android)
+
+## Development Approach
+This project uses MonoGame framework with C# for cross-platform development, avoiding full game engines in favor of a framework-based approach.
+

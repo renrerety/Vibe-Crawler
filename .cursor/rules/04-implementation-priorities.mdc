@@ -1,0 +1,31 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Implementation Priorities
+
+## Core Systems (Implement First)
+1. **Game Loop & Basic Architecture** - Set up the MonoGame project structure
+2. **Character Movement & Controls** - Basic top-down movement with platform-specific input handling
+3. **Combat Fundamentals** - Attack, dodge, collision detection
+4. **Procedural Generation** - Room and dungeon layout generation
+5. **Aetherium Weaving** - The signature feature allowing temporary enhancement of gear/abilities
+
+## Secondary Systems
+- **Meta Progression** - Hub area and persistent upgrades
+- **Enemy AI** - Behavior patterns and attack sequences
+- **UI/UX Development** - Menu systems and HUD elements
+- **Audio Implementation** - Sound effects and music
+
+## Cross-Platform Considerations
+- Design UI elements to work well on both large (PC) and small (mobile) screens
+- Implement flexible control schemes that adapt to platform capabilities
+- Optimize performance for mobile targets without compromising core gameplay
+
+# IMPORTANT:
+# Always read memory-bank/@architecture.md before writing any code. Include entire database schema.
+# Always read memory-bank/@game-design-document.md before writing any code.
+# After adding a major feature or completing a milestone, update memory-bank/@architecture.md.
+# Always emphasize modularity (multiple files) and discourage a monolith (one giant file).
+
