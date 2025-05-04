@@ -13,7 +13,7 @@ namespace AetheriumDepths.Generation
         private const int MIN_LEAF_SIZE = 100; // Minimum size of a leaf node
         private const int MIN_ROOM_SIZE = 50;  // Minimum size of a room
         private const float ROOM_SIZE_FACTOR = 0.7f; // How much of a leaf can be used for a room
-        private const int CORRIDOR_WIDTH = 20; // Width of corridors between rooms
+        private const int CORRIDOR_WIDTH = 40; // Width of corridors between rooms
         private const int MAX_ITERATIONS = 8;  // Maximum number of recursive splits
         
         // Random number generator

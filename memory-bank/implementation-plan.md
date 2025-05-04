@@ -247,6 +247,68 @@ Remember to **always** consult `@architecture.md` and `@progress.md` before impl
 
 This concludes the plan for Phase 6. It focuses on making the core loop engaging and laying the groundwork for further expansion based on actual procedural content and more dynamic combat and systems. Remember to rigorously validate each step and keep the codebase modular. Good luck!
 
+
+Okay, AI developers, Phase 6 established a strong core gameplay loop with foundational procedural generation and expanded mechanics. Based on the updated `@architecture.md` and `@progress.md`, let's proceed to Phase 7.
+
+**Phase 7 Goal:** Enhance the player experience and reinforce the dungeon environment by implementing a dynamic camera that follows the player and strictly constraining all entity movement (Player and Enemies) within the generated dungeon's boundaries (rooms and corridors).
+
+Remember to **always** consult `@architecture.md` and `@progress.md`. Adhere to modularity and update `@architecture.md` upon completion of this phase, detailing the new Camera system and the movement constraint logic within the Dungeon/Collision systems.
+
+## Implementation Plan: Aetherium Depths - Phase 7: Camera & Dungeon Constraints
+
+**Phase 7.1: Dungeon Collision Logic**
+
+1.  **Step 7.1.1: Refine Dungeon Data Accessibility**
+    *   **Instruction:** Ensure the `Dungeon` class provides an efficient way to access the geometry (Rooms and Corridors). If not already present, add a method like `GetAllWalkableBounds()` that returns a `List<Rectangle>` containing the bounds of all rooms and corridors.
+    *   **Validation:** Call this new method after dungeon generation. Log the number of rectangles returned; confirm it matches the number of rooms plus the number of corridor segments generated.
+
+2.  **Step 7.2.2: Implement `IsPositionValid` Check**
+    *   **Instruction:** Create or refine a method within the `Dungeon` class or `CollisionUtility`, named something like `IsPositionValid(Vector2 position, List<Rectangle> walkableBounds)`. This method should take a world position and the list of walkable bounds (from Step 7.1.1) and return `true` if the position falls within *any* of the rectangles in the list, `false` otherwise.
+    *   **Validation:** Test this method with known points inside and outside generated rooms/corridors. Confirm it returns the correct boolean result via logging or debug commands.
+
+3.  **Step 7.2.3: Implement `IsMovementValid` Check (Using Bounds)**
+    *   **Instruction:** Create a more robust check, perhaps `IsMovementValid(Rectangle proposedBounds, List<Rectangle> walkableBounds)`. This method takes the entity's bounding box *at its potential new position* and checks if this *entire rectangle* is contained within the walkable geometry. A simple approach is to check if all four corners of the `proposedBounds` are within *any* single `Rectangle` in `walkableBounds` OR if the `proposedBounds` fully fits within one of the `walkableBounds` rectangles. Handle cases where the bounds might span across a room/corridor junction if necessary (simple approach: require it to be fully within *one* walkable area for now).
+    *   **Validation:** Test this method by providing rectangles known to be fully inside, partially inside, and fully outside walkable areas. Verify correct boolean returns via logging/debug.
+
+**Phase 7.2: Constrain Entity Movement**
+
+1.  **Step 7.2.1: Integrate Collision Check into Player Movement**
+    *   **Instruction:** In the `Player.Update` method (or wherever movement logic resides), *before* updating `Player.Position`, calculate the `proposedPosition` and the corresponding `proposedBounds` (Rectangle at the proposed position). Call the `Dungeon.IsMovementValid` (or equivalent check from 7.1.3) using the `proposedBounds` and the dungeon's `walkableBounds`. *Only* update the `Player.Position` if the movement is valid.
+    *   **Validation:** Run the game. Move the player towards a wall (edge of a room or corridor). Confirm the player sprite stops exactly at the boundary and cannot move outside the generated dungeon layout. Test movement between connected rooms via corridors.
+
+2.  **Step 7.2.2: Integrate Collision Check into Enemy Movement**
+    *   **Instruction:** Apply the same logic as Step 7.2.1 to the `Enemy.Update` method. Before updating an enemy's position based on its AI movement, calculate its `proposedBounds` and check if the movement is valid using the `Dungeon.IsMovementValid` check. Only update the `Enemy.Position` if the move is valid.
+    *   **Validation:** Observe enemies moving towards the player. Confirm they stop at room/corridor boundaries and cannot move outside the generated dungeon layout. Ensure they can navigate through corridors if their path requires it.
+
+**Phase 7.3: Dynamic Follow Camera**
+
+1.  **Step 7.3.1: Create Camera2D Class**
+    *   **Instruction:** Create a new class `Camera2D` (likely in `Core/`). Give it properties: `Vector2 Position`, `float Zoom` (default 1.0f), `float Rotation` (default 0.0f), and store the `Viewport` dimensions.
+    *   **Validation:** The class compiles and can be instantiated.
+
+2.  **Step 7.3.2: Implement Camera Transform Matrix**
+    *   **Instruction:** Add a method `GetTransformMatrix()` to `Camera2D`. This method should calculate and return a `Matrix`. The matrix needs to incorporate:
+        *   Translation to center the view on the camera's negative position (`Matrix.CreateTranslation(-Position.X, -Position.Y, 0)`).
+        *   Rotation around the center (`Matrix.CreateRotationZ(Rotation)`).
+        *   Scaling/Zoom around the center (`Matrix.CreateScale(Zoom, Zoom, 1)`).
+        *   Translation to offset by the viewport center (`Matrix.CreateTranslation(Viewport.Width * 0.5f, Viewport.Height * 0.5f, 0)`).
+        Combine these correctly (translate, rotate, scale, translate origin).
+    *   **Validation:** Instantiate the camera. Call `GetTransformMatrix()` and log its value. Modify camera Position, Zoom, Rotation and verify the matrix changes accordingly (this requires understanding Matrix math or comparing against known results).
+
+3.  **Step 7.3.3: Integrate Camera into Rendering**
+    *   **Instruction:** In `AetheriumGame` (or the `Gameplay` state), create an instance of `Camera2D`. In the main `Draw` call for the `Gameplay` state, modify the primary `SpriteBatch.Begin` call (the one used for drawing the world: player, enemies, dungeon) to use the `camera.GetTransformMatrix()` in its `transformMatrix` parameter.
+    *   **Validation:** Run the game. Initially, the view might be offset if the camera position is (0,0) and the world isn't. Manually set the camera's `Position` to the player's starting position; confirm the player appears centered (or near center depending on matrix specifics).
+
+4.  **Step 7.3.4: Implement Smooth Camera Following**
+    *   **Instruction:** In the `Gameplay` state's `Update` method, after the player's position has been updated and validated, update the camera's target. Use `Vector2.Lerp` to smoothly interpolate the `Camera2D.Position` towards the `Player.Position`. Choose a suitable lerp factor (e.g., 0.1f) to control smoothness (lower value = smoother/slower follow). `camera.Position = Vector2.Lerp(camera.Position, player.Position, lerpFactor);`
+    *   **Validation:** Run the game. Move the player around. Observe the game world view smoothly panning to keep the player generally centered on the screen. The movement should feel fluid, not instantaneous or jerky.
+
+5.  **Step 7.3.5: Ensure UI Remains Static**
+    *   **Instruction:** Verify that the UI rendering (HUD elements like health bar, essence count, minimap, buff indicators) is *not* affected by the camera transform. This typically means having a separate `SpriteBatch.Begin()` / `End()` block for UI elements that does *not* pass the camera's transform matrix (or explicitly passes `Matrix.Identity`).
+    *   **Validation:** Run the game and move the player. Confirm the game world scrolls according to the camera, but the HUD elements (health bar, essence count, minimap, etc.) remain fixed in their screen positions (e.g., top-left, top-right).
+
+This completes Phase 7. The game should now feel more grounded within its environment, with entities respecting boundaries and the player having a dynamic view of their surroundings. Remember to update `@architecture.md` with details on the `Camera2D` class and the dungeon collision checking logic integration.
+
 **Important Notes:**
 - Focus on correctness over speed - there are no set timeframes per phase. Ensure each step works properly before proceeding.
 - Use simple PNG files for placeholder assets, processed through the MonoGame content pipeline.

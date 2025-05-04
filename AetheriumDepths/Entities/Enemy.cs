@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using AetheriumDepths.Generation;
 
 namespace AetheriumDepths.Entities
 {
@@ -115,7 +116,8 @@ namespace AetheriumDepths.Entities
         /// </summary>
         /// <param name="playerPosition">The current position of the player.</param>
         /// <param name="deltaTime">Time elapsed since the last update.</param>
-        public void Update(Vector2 playerPosition, float deltaTime)
+        /// <param name="dungeon">The current dungeon for collision detection.</param>
+        public void Update(Vector2 playerPosition, float deltaTime, Dungeon dungeon)
         {
             if (!IsActive) return;
             
@@ -154,8 +156,58 @@ namespace AetheriumDepths.Entities
                     FacingDirection = directionToPlayer;
                 }
                 
-                // Move towards player
-                Position += directionToPlayer * MovementSpeed * deltaTime;
+                // Calculate proposed new position
+                Vector2 proposedPosition = Position + directionToPlayer * MovementSpeed * deltaTime;
+                
+                // Calculate bounds at the proposed position
+                Rectangle proposedBounds = new Rectangle(
+                    (int)proposedPosition.X,
+                    (int)proposedPosition.Y,
+                    Sprite.Width,
+                    Sprite.Height);
+                
+                // Only move if the proposed movement is valid
+                if (dungeon.IsMovementValid(proposedBounds))
+                {
+                    // Move towards player
+                    Position = proposedPosition;
+                }
+                else
+                {
+                    // If the movement is invalid, try to slide along walls
+                    
+                    // Try moving only in X direction
+                    Vector2 proposedXPosition = new Vector2(
+                        Position.X + directionToPlayer.X * MovementSpeed * deltaTime,
+                        Position.Y);
+                    
+                    Rectangle proposedXBounds = new Rectangle(
+                        (int)proposedXPosition.X,
+                        (int)proposedXPosition.Y,
+                        Sprite.Width,
+                        Sprite.Height);
+                    
+                    if (dungeon.IsMovementValid(proposedXBounds))
+                    {
+                        Position = proposedXPosition;
+                    }
+                    
+                    // Try moving only in Y direction
+                    Vector2 proposedYPosition = new Vector2(
+                        Position.X,
+                        Position.Y + directionToPlayer.Y * MovementSpeed * deltaTime);
+                    
+                    Rectangle proposedYBounds = new Rectangle(
+                        (int)proposedYPosition.X,
+                        (int)proposedYPosition.Y,
+                        Sprite.Width,
+                        Sprite.Height);
+                    
+                    if (dungeon.IsMovementValid(proposedYBounds))
+                    {
+                        Position = proposedYPosition;
+                    }
+                }
             }
         }
         

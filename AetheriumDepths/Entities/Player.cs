@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using AetheriumDepths.Generation;
 
 namespace AetheriumDepths.Entities
 {
@@ -149,8 +150,8 @@ namespace AetheriumDepths.Entities
         /// <param name="movementVector">The direction to move in.</param>
         /// <param name="speed">The speed at which to move.</param>
         /// <param name="deltaTime">Time elapsed since the last update.</param>
-        /// <param name="viewportBounds">The bounds of the visible game screen.</param>
-        public void Move(Vector2 movementVector, float speed, float deltaTime, Rectangle viewportBounds)
+        /// <param name="dungeon">The current dungeon for collision detection.</param>
+        public void Move(Vector2 movementVector, float speed, float deltaTime, Dungeon dungeon)
         {
             // Apply movement
             float effectiveSpeed = speed;
@@ -174,20 +175,70 @@ namespace AetheriumDepths.Entities
                 effectiveMovementVector = LastMovementDirection;
             }
             
-            Vector2 newPosition = Position + (effectiveMovementVector * effectiveSpeed * deltaTime);
-
-            // If movement direction is non-zero, update LastMovementDirection
-            if (movementVector != Vector2.Zero)
+            // Calculate the proposed new position
+            Vector2 proposedPosition = Position + (effectiveMovementVector * effectiveSpeed * deltaTime);
+            
+            // Calculate the bounds at the proposed position
+            Rectangle proposedBounds = new Rectangle(
+                (int)proposedPosition.X,
+                (int)proposedPosition.Y,
+                Sprite.Width,
+                Sprite.Height);
+                
+            // Check if the proposed movement is valid within the dungeon
+            if (dungeon.IsMovementValid(proposedBounds))
             {
-                LastMovementDirection = Vector2.Normalize(movementVector);
+                // If the movement is valid, update the position
+                Position = proposedPosition;
+                
+                // If movement direction is non-zero, update LastMovementDirection
+                if (movementVector != Vector2.Zero)
+                {
+                    LastMovementDirection = Vector2.Normalize(movementVector);
+                }
             }
-
-            // Clamp to viewport bounds (accounting for sprite size)
-            newPosition.X = MathHelper.Clamp(newPosition.X, 0, viewportBounds.Width - (Sprite?.Width ?? 0));
-            newPosition.Y = MathHelper.Clamp(newPosition.Y, 0, viewportBounds.Height - (Sprite?.Height ?? 0));
-
-            // Update position
-            Position = newPosition;
+            else
+            {
+                // If movement is invalid, try to slide along walls by attempting X and Y movement separately
+                
+                // Try moving only in X direction
+                Vector2 proposedXPosition = new Vector2(
+                    Position.X + (effectiveMovementVector.X * effectiveSpeed * deltaTime),
+                    Position.Y);
+                    
+                Rectangle proposedXBounds = new Rectangle(
+                    (int)proposedXPosition.X,
+                    (int)proposedXPosition.Y,
+                    Sprite.Width,
+                    Sprite.Height);
+                    
+                if (dungeon.IsMovementValid(proposedXBounds))
+                {
+                    Position = proposedXPosition;
+                }
+                
+                // Try moving only in Y direction
+                Vector2 proposedYPosition = new Vector2(
+                    Position.X,
+                    Position.Y + (effectiveMovementVector.Y * effectiveSpeed * deltaTime));
+                    
+                Rectangle proposedYBounds = new Rectangle(
+                    (int)proposedYPosition.X,
+                    (int)proposedYPosition.Y,
+                    Sprite.Width,
+                    Sprite.Height);
+                    
+                if (dungeon.IsMovementValid(proposedYBounds))
+                {
+                    Position = proposedYPosition;
+                }
+                
+                // Update LastMovementDirection if the movement vector is non-zero
+                if (movementVector != Vector2.Zero)
+                {
+                    LastMovementDirection = Vector2.Normalize(movementVector);
+                }
+            }
         }
 
         /// <summary>

@@ -58,6 +58,12 @@ namespace AetheriumDepths
         private const float DamageInvincibilityDuration = 1.0f; // Time in seconds
         private float _damageInvincibilityTimer = 0f; // Current remaining invincibility time
 
+        // Camera
+        private Camera2D _camera;
+        
+        // Camera following parameters
+        private const float CameraLerpFactor = 0.1f; // Smooth following factor
+
         public AetheriumGame()
         {
             _graphics = new GraphicsDeviceManager(this);
@@ -87,6 +93,9 @@ namespace AetheriumDepths
             
             // Initialize dungeon generator
             _dungeonGenerator = new DungeonGenerator();
+            
+            // Initialize camera with the viewport
+            _camera = new Camera2D(GraphicsDevice.Viewport);
 
             // Initialization logic
             Console.WriteLine("Initializing Aetherium Depths...");
@@ -254,12 +263,9 @@ namespace AetheriumDepths
 
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
-
-            // Start drawing
-            _spriteBatch.Begin();
-
-            // Draw based on current state
+            GraphicsDevice.Clear(Color.Black);
+            
+            // Draw logic based on current state
             switch (_stateManager.CurrentState)
             {
                 case StateManager.GameState.MainMenu:
@@ -275,9 +281,7 @@ namespace AetheriumDepths
                     DrawGameOver(gameTime);
                     break;
             }
-
-            _spriteBatch.End();
-
+            
             base.Draw(gameTime);
         }
 
@@ -311,156 +315,173 @@ namespace AetheriumDepths
         {
             float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
             
-            // Update damage invincibility timer
-            if (_damageInvincibilityTimer > 0f)
+            // Get input actions from the input manager
+            bool isAttackPressed = _inputManager.IsActionJustPressed(InputManager.GameAction.Attack);
+            bool isDodgePressed = _inputManager.IsActionJustPressed(InputManager.GameAction.Dodge);
+            bool isInteractPressed = _inputManager.IsActionJustPressed(InputManager.GameAction.Interact);
+            bool isRegeneratePressed = Keyboard.GetState().IsKeyDown(Keys.R);
+            
+            // Check for game regeneration
+            if (isRegeneratePressed)
             {
-                _damageInvincibilityTimer -= deltaTime;
+                GenerateDungeon();
+                return;
             }
             
-            // Get the movement vector from the input manager
+            // Process input for player movement
             Vector2 movementVector = _inputManager.GetMovementVector();
             
-            // Move the player
-            _player.Move(
-                movementVector, 
-                PlayerSpeed, 
-                deltaTime,
-                GraphicsDevice.Viewport.Bounds);
-                
-            // Update player state
+            // Update player position
+            _player.Move(movementVector, PlayerSpeed, deltaTime, _currentDungeon);
+            
+            // Update camera to follow player with smooth interpolation
+            _camera.MoveToTarget(_player.Position, CameraLerpFactor);
+            
+            // Update player state (attack cooldown, dodge duration, etc.)
             _player.Update(deltaTime);
             
-            // Check for attack input
-            if (_inputManager.IsActionJustPressed(InputManager.GameAction.Attack))
+            // Process player attack
+            if (isAttackPressed)
             {
                 _player.Attack();
-                Console.WriteLine("Player attacked!");
             }
             
-            // Check for dodge input
-            if (_inputManager.IsActionJustPressed(InputManager.GameAction.Dodge))
+            // Process player dodge
+            if (isDodgePressed)
             {
                 _player.Dodge();
-                Console.WriteLine("Player dodged!");
             }
             
-            // Check for interact input
-            if (_inputManager.IsActionJustPressed(InputManager.GameAction.Interact))
+            // Update damage invincibility timer
+            if (_damageInvincibilityTimer > 0)
             {
-                // Check if player is near the weaving altar
-                if (CollisionUtility.CheckAABBCollision(_player.Bounds, _weavingAltar.Bounds))
+                _damageInvincibilityTimer -= deltaTime;
+                if (_damageInvincibilityTimer < 0)
                 {
-                    // Check for buff selection keys
-                    var keyboardState = Keyboard.GetState();
+                    _damageInvincibilityTimer = 0;
+                }
+            }
+            
+            // Check for weaving altar interaction
+            if (isInteractPressed)
+            {
+                Rectangle playerBounds = _player.Bounds;
+                Rectangle altarBounds = _weavingAltar.Bounds;
+                
+                if (CollisionUtility.CheckAABBCollision(playerBounds, altarBounds))
+                {
+                    Console.WriteLine("Interacting with Weaving Altar");
                     
-                    if (keyboardState.IsKeyDown(Keys.D1))
+                    // Check for specific buff selection key presses
+                    bool damageBuffSelected = Keyboard.GetState().IsKeyDown(Keys.D1);
+                    bool speedBuffSelected = Keyboard.GetState().IsKeyDown(Keys.D2);
+                    
+                    if (damageBuffSelected)
                     {
-                        // Try to activate damage buff by spending essence
-                        _player.ActivateDamageBuff(AetheriumWeavingCost);
-                        Console.WriteLine("Player tried to activate damage buff at altar!");
+                        bool success = _player.ActivateDamageBuff(AetheriumWeavingCost);
+                        if (success)
+                        {
+                            Console.WriteLine($"Activated Damage Buff for {AetheriumWeavingCost} essence");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Not enough essence to activate Damage Buff. Need {AetheriumWeavingCost}.");
+                        }
                     }
-                    else if (keyboardState.IsKeyDown(Keys.D2))
+                    else if (speedBuffSelected)
                     {
-                        // Try to activate speed buff by spending essence
-                        _player.ActivateSpeedBuff(AetheriumWeavingCost);
-                        Console.WriteLine("Player tried to activate speed buff at altar!");
+                        bool success = _player.ActivateSpeedBuff(AetheriumWeavingCost);
+                        if (success)
+                        {
+                            Console.WriteLine($"Activated Speed Buff for {AetheriumWeavingCost} essence");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Not enough essence to activate Speed Buff. Need {AetheriumWeavingCost}.");
+                        }
                     }
                     else
                     {
-                        Console.WriteLine("Player interacted with weaving altar! Press 1 for Damage Buff or 2 for Speed Buff");
+                        Console.WriteLine("Press 1 for Damage Buff or 2 for Speed Buff");
                     }
                 }
             }
-            
-            // Check for enemy collision with player (enemy touch damage)
-            if (!_player.IsInvincible && _damageInvincibilityTimer <= 0f)
-            {
-                // Check for enemy attack hitboxes
-                foreach (Enemy enemy in _enemies)
-                {
-                    if (enemy.IsActive && enemy.IsAttacking && 
-                        CollisionUtility.CheckAABBCollision(_player.Bounds, enemy.AttackHitbox))
-                    {
-                        // Player takes damage from enemy attack
-                        bool playerAlive = _player.TakeDamage(EnemyTouchDamage * 2); // Attacks deal double touch damage
-                        
-                        // Activate invincibility timer to prevent rapid damage
-                        _damageInvincibilityTimer = DamageInvincibilityDuration;
-                        
-                        // Check if player died
-                        if (!playerAlive)
-                        {
-                            Console.WriteLine("Player died from enemy attack!");
-                            // Transition to GameOver state
-                            _stateManager.ChangeState(StateManager.GameState.GameOver);
-                        }
-                        
-                        break; // Only take damage from one enemy per frame
-                    }
-                }
-                
-                // Check for direct enemy collision (touch damage)
-                foreach (Enemy enemy in _enemies)
-                {
-                    if (enemy.IsActive && CollisionUtility.CheckAABBCollision(_player.Bounds, enemy.Bounds))
-                    {
-                        // Player takes damage from touching enemy
-                        bool playerAlive = _player.TakeDamage(EnemyTouchDamage);
-                        
-                        // Activate invincibility timer to prevent rapid damage
-                        _damageInvincibilityTimer = DamageInvincibilityDuration;
-                        
-                        // Check if player died
-                        if (!playerAlive)
-                        {
-                            Console.WriteLine("Player died!");
-                            // Transition to GameOver state
-                            _stateManager.ChangeState(StateManager.GameState.GameOver);
-                        }
-                        
-                        break; // Only take damage from one enemy per frame
-                    }
-                }
-            }
-            
-            // Check for attack collision with enemies
-            if (_player.IsAttacking)
-            {
-                foreach (Enemy enemy in _enemies)
-                {
-                    if (enemy.IsActive && CollisionUtility.CheckAABBCollision(_player.AttackHitbox, enemy.Bounds))
-                    {
-                        // Calculate damage based on buff status
-                        int damage = _player.HasDamageBuff ? AttackDamage * DamageBuffMultiplier : AttackDamage;
-                        
-                        // Deal damage to the enemy
-                        enemy.TakeDamage(damage);
-                        Console.WriteLine($"Hit enemy! Enemy health: {enemy.Health}");
-                        
-                        // Check if enemy died
-                        if (enemy.Health <= 0)
-                        {
-                            // Grant Aetherium essence on enemy death
-                            _player.AddAetheriumEssence(AetheriumEssenceReward);
-                        }
-                        
-                        // Deactivate the current attack (prevent multiple hits from one swing)
-                        _player.DeactivateAttack();
-                        break;
-                    }
-                }
-            }
-            
-            // Clean up inactive enemies (not needed with a single enemy, but good practice)
-            _enemies.RemoveAll(enemy => !enemy.IsActive);
             
             // Update enemies
             foreach (Enemy enemy in _enemies)
             {
-                enemy.Update(_player.Position, deltaTime);
+                if (enemy.IsActive)
+                {
+                    // Update enemy AI and position
+                    enemy.Update(_player.Position, deltaTime, _currentDungeon);
+                    
+                    // Check for enemy touch damage (if not in invincibility frames)
+                    if (!_player.IsInvincible && _damageInvincibilityTimer <= 0 && 
+                        CollisionUtility.CheckAABBCollision(_player.Bounds, enemy.Bounds))
+                    {
+                        bool isPlayerAlive = _player.TakeDamage(EnemyTouchDamage);
+                        if (!isPlayerAlive)
+                        {
+                            // Player died, transition to game over state
+                            _stateManager.ChangeState(StateManager.GameState.GameOver);
+                            return;
+                        }
+                        
+                        // Start invincibility frames
+                        _damageInvincibilityTimer = DamageInvincibilityDuration;
+                    }
+                    
+                    // Check for enemy attack damage
+                    if (enemy.IsAttacking && !_player.IsInvincible && _damageInvincibilityTimer <= 0 && 
+                        CollisionUtility.CheckAABBCollision(_player.Bounds, enemy.AttackHitbox))
+                    {
+                        bool isPlayerAlive = _player.TakeDamage(EnemyTouchDamage);
+                        if (!isPlayerAlive)
+                        {
+                            // Player died, transition to game over state
+                            _stateManager.ChangeState(StateManager.GameState.GameOver);
+                            return;
+                        }
+                        
+                        // Start invincibility frames
+                        _damageInvincibilityTimer = DamageInvincibilityDuration;
+                    }
+                }
             }
             
-            Console.WriteLine($"Updating Gameplay state: {gameTime.TotalGameTime}, Player at: {_player.Position}");
+            // Check for player attack collisions
+            if (_player.IsAttacking)
+            {
+                foreach (Enemy enemy in _enemies)
+                {
+                    if (enemy.IsActive)
+                    {
+                        if (CollisionUtility.CheckAABBCollision(enemy.Bounds, _player.AttackHitbox))
+                        {
+                            // Calculate damage, accounting for damage buff
+                            int damage = AttackDamage;
+                            if (_player.HasDamageBuff)
+                            {
+                                damage *= DamageBuffMultiplier;
+                            }
+                            
+                            // Apply damage to enemy
+                            enemy.TakeDamage(damage);
+                            
+                            // Deactivate the current attack to prevent multiple hits
+                            _player.DeactivateAttack();
+                            
+                            // If enemy was killed, grant essence
+                            if (!enemy.IsActive)
+                            {
+                                _player.AddAetheriumEssence(AetheriumEssenceReward);
+                            }
+                            
+                            break; // Only damage one enemy per attack
+                        }
+                    }
+                }
+            }
         }
 
         private void UpdatePaused(GameTime gameTime)
@@ -488,7 +509,17 @@ namespace AetheriumDepths
 
         private void DrawGameplay(GameTime gameTime)
         {
-            // Draw the dungeon rooms
+            // Start drawing the game world with camera transform
+            _spriteBatch.Begin(
+                SpriteSortMode.Deferred, 
+                BlendState.AlphaBlend, 
+                SamplerState.PointClamp, 
+                null, 
+                null, 
+                null, 
+                _camera.GetTransformMatrix()); // Apply camera transform
+                
+            // Draw dungeon
             DrawDungeon();
             
             // Draw the weaving altar
@@ -498,20 +529,29 @@ namespace AetheriumDepths
             foreach (Enemy enemy in _enemies)
             {
                 enemy.Draw(_spriteBatch);
-                // Draw enemy attack hitbox if attacking (for debugging)
-                enemy.DrawAttackHitbox(_spriteBatch, _debugTexture);
+                
+                // Draw attack hitbox if debugging
+                if (enemy.IsAttacking)
+                {
+                    enemy.DrawAttackHitbox(_spriteBatch, _debugTexture);
+                }
             }
             
-            // Draw the player
+            // Draw player
             _player.Draw(_spriteBatch, _damageInvincibilityTimer);
             
-            // Draw attack hitbox if attacking (for debugging)
-            _player.DrawAttackHitbox(_spriteBatch, _debugTexture);
+            // Draw attack hitbox if debugging
+            if (_player.IsAttacking)
+            {
+                _player.DrawAttackHitbox(_spriteBatch, _debugTexture);
+            }
             
-            // Draw UI elements (essence counter, buff indicators)
+            _spriteBatch.End();
+            
+            // Draw UI elements without camera transform (screen space)
+            _spriteBatch.Begin();
             DrawGameplayUI();
-            
-            Console.WriteLine($"Drawing Gameplay state: {gameTime.TotalGameTime}");
+            _spriteBatch.End();
         }
         
         /// <summary>
@@ -530,15 +570,15 @@ namespace AetheriumDepths
             // Draw each room
             foreach (Room room in _currentDungeon.Rooms)
             {
-                // Draw room outline with a thickness of 2 pixels
-                DrawRectangleOutline(room.Bounds, Color.White, 2);
+                // Draw room outline with thinner, more transparent lines
+                DrawRectangleOutline(room.Bounds, new Color((byte)255, (byte)255, (byte)255, (byte)120), 1);
                 
                 // Fill the room with a slight color
                 Rectangle innerRect = new Rectangle(
-                    room.Bounds.X + 2, 
-                    room.Bounds.Y + 2, 
-                    room.Bounds.Width - 4, 
-                    room.Bounds.Height - 4);
+                    room.Bounds.X + 1, 
+                    room.Bounds.Y + 1, 
+                    room.Bounds.Width - 2, 
+                    room.Bounds.Height - 2);
                 _spriteBatch.Draw(_debugTexture, innerRect, new Color((byte)50, (byte)50, (byte)70, (byte)50));
             }
             
@@ -548,7 +588,7 @@ namespace AetheriumDepths
                 foreach (BSPNode leaf in _currentDungeon.LeafNodes)
                 {
                     // Draw leaf node boundaries with a different color
-                    DrawRectangleOutline(leaf.Area, new Color((byte)50, (byte)200, (byte)50, (byte)100), 1);
+                    DrawRectangleOutline(leaf.Area, new Color((byte)50, (byte)200, (byte)50, (byte)80), 1);
                 }
             }
         }

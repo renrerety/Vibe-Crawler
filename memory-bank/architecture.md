@@ -466,3 +466,104 @@ As complexity increases, a more formalized testing approach is needed:
 The Aetherium Depths architecture has established a solid foundation through the first five phases of development. The modular design approach taken from the beginning has positioned us well for the upcoming expansion. Our focus for the next phase will be on enhancing the procedural generation, expanding the combat system, completing the Aetherium Weaving mechanics, and implementing core UI elements.
 
 By addressing the technical debt areas identified and carefully planning the integration of new systems, we will maintain code quality while delivering the expanded feature set. The architectural improvements outlined in this document will guide our development efforts and ensure the game remains scalable and maintainable as it grows in complexity.
+
+## 9. Camera & Collision Systems
+
+### 9.1 Camera System
+
+The camera system in Aetherium Depths provides a dynamic view of the game world, following the player with smooth interpolation to enhance the gaming experience. It consists of the following key components:
+
+#### 9.1.1 Camera2D Class
+
+The `Camera2D` class manages the viewpoint into the game world with these primary features:
+
+1. **Properties**
+   - `Position`: The current focal point of the camera in world coordinates
+   - `Zoom`: A scaling factor allowing for zoom in/out effects (default: 1.0)
+   - `Rotation`: The camera's rotation in radians (default: 0.0)
+   - `Viewport`: Reference to the graphics device viewport dimensions
+
+2. **Core Functionality**
+   - `GetTransformMatrix()`: Creates a combined transformation matrix for rendering
+   - `MoveToTarget()`: Smoothly interpolates the camera position toward a target
+   - `UpdateViewport()`: Updates the viewport dimensions when the window size changes
+
+#### 9.1.2 Transformation Pipeline
+
+The camera utilizes a sequence of matrix transformations to convert world coordinates to screen coordinates:
+
+1. **Translation**: Moves the world to center the view at the camera's position (negative offset)
+2. **Rotation**: Applies the camera's rotation around its focal point
+3. **Scaling**: Applies the zoom factor to scale the view up or down
+4. **Origin Translation**: Offsets the result to place the camera focal point at the center of the screen
+
+This pipeline is implemented in the `GetTransformMatrix()` method and applied to the `SpriteBatch` when rendering the game world.
+
+#### 9.1.3 Smooth Following
+
+To prevent jerky camera movement, a smooth following mechanism is implemented:
+
+1. The camera maintains its current position property
+2. Each frame, it calculates a new position using `Vector2.Lerp` to interpolate between its current position and the player's position
+3. The `CameraLerpFactor` (set to 0.1) controls the speed of the interpolation, with lower values providing smoother but slower camera movement
+
+#### 9.1.4 Rendering Integration
+
+The rendering system is now separated into two distinct passes:
+
+1. **World Rendering**: Uses the camera's transform matrix to render the game world, dungeon, entities, and other world elements
+2. **UI Rendering**: Uses an identity matrix (no transformation) to render UI elements in screen space, ensuring they remain fixed regardless of camera movement
+
+### 9.2 Collision & Boundary System
+
+To ensure entities remain within the dungeon's bounds, a comprehensive collision system was implemented:
+
+#### 9.2.1 Walkable Area Definition
+
+The dungeon geometry defines the walkable areas through:
+
+1. **Room Bounds**: Rectangle areas representing each room
+2. **Corridor Bounds**: Rectangle segments connecting rooms
+3. **Combined Walkable Areas**: A collection of all walkable rectangles in the dungeon
+
+#### 9.2.2 Movement Validation
+
+The `Dungeon` class provides validation methods to enforce boundaries:
+
+1. **`GetAllWalkableBounds()`**: Returns a list of all walkable rectangles
+2. **`IsPositionValid(Vector2 position)`**: Checks if a single point is within any walkable area
+3. **`IsMovementValid(Rectangle bounds)`**: Validates if an entity's bounds are fully contained within a walkable area
+
+The validation approach ensures all four corners of an entity's bounding box remain within walkable areas, preventing entities from clipping through walls or entering invalid spaces.
+
+#### 9.2.3 Movement Implementation
+
+Entity movement now follows this process:
+
+1. Calculate a proposed new position based on input or AI
+2. Generate a bounding rectangle at the proposed position
+3. Validate the proposed bounds against walkable areas
+4. If valid, update the position; if invalid, attempt to slide along walls by testing X and Y movement separately
+
+This approach creates a more natural feeling movement system, where entities smoothly slide along walls rather than stopping abruptly when hitting boundaries at an angle.
+
+### 9.3 System Integration
+
+The camera and collision systems are tightly integrated with the existing architecture:
+
+1. The `Camera2D` instance is created and managed by the `AetheriumGame` class
+2. Entity movement methods (`Player.Move` and `Enemy.Update`) now accept the current `Dungeon` instance for boundary validation
+3. The game's `Draw` method separates world and UI rendering into distinct SpriteBatch passes with different transformation matrices
+4. The `UpdateGameplay` method updates the camera position based on player movement, creating a continuous feedback loop
+
+This integration enhances the player experience by providing a dynamic view of the procedurally generated dungeons while ensuring entities remain properly constrained within the game world boundaries.
+
+### 9.4 Future Enhancements
+
+Potential future enhancements to these systems include:
+
+1. **Camera Effects**: Screen shake, zoom effects, and smooth transitions between rooms
+2. **Advanced Collision**: More sophisticated physics interactions and collision response
+3. **Camera Bounds**: Constraining the camera to prevent showing areas outside the dungeon
+4. **Target Priorities**: Dynamic camera targeting based on combat or environmental factors
+5. **Room Transitions**: Special camera behavior when moving between rooms

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
+using System.Linq;
 
 namespace AetheriumDepths.Generation
 {
@@ -71,6 +72,97 @@ namespace AetheriumDepths.Generation
             // Add the corridor segments
             Corridors.Add(horizontalSegment);
             Corridors.Add(verticalSegment);
+        }
+
+        /// <summary>
+        /// Gets all walkable bounds (rooms and corridors) in the dungeon.
+        /// </summary>
+        /// <returns>A list of rectangles representing all walkable areas in the dungeon.</returns>
+        public List<Rectangle> GetAllWalkableBounds()
+        {
+            // Create a new list to hold all walkable bounds
+            List<Rectangle> walkableBounds = new List<Rectangle>();
+            
+            // Add all room bounds
+            foreach (Room room in Rooms)
+            {
+                walkableBounds.Add(room.Bounds);
+            }
+            
+            // Add all corridor bounds
+            walkableBounds.AddRange(Corridors);
+            
+            return walkableBounds;
+        }
+        
+        /// <summary>
+        /// Checks if a position is within any walkable bounds in the dungeon.
+        /// </summary>
+        /// <param name="position">The position to check.</param>
+        /// <returns>True if the position is within walkable bounds; false otherwise.</returns>
+        public bool IsPositionValid(Vector2 position)
+        {
+            // Get all walkable bounds
+            List<Rectangle> walkableBounds = GetAllWalkableBounds();
+            
+            // Create a point from the position
+            Point point = new Point((int)position.X, (int)position.Y);
+            
+            // Check if the point is within any of the walkable bounds
+            foreach (Rectangle bounds in walkableBounds)
+            {
+                if (bounds.Contains(point))
+                {
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+        
+        /// <summary>
+        /// Checks if an entity's movement to a new position is valid based on its bounds.
+        /// </summary>
+        /// <param name="proposedBounds">The entity's bounds at the proposed position.</param>
+        /// <returns>True if the movement is valid; false otherwise.</returns>
+        public bool IsMovementValid(Rectangle proposedBounds)
+        {
+            // Get all walkable bounds
+            List<Rectangle> walkableBounds = GetAllWalkableBounds();
+            
+            // Check each corner of the proposed bounds
+            Point topLeft = new Point(proposedBounds.Left, proposedBounds.Top);
+            Point topRight = new Point(proposedBounds.Right, proposedBounds.Top);
+            Point bottomLeft = new Point(proposedBounds.Left, proposedBounds.Bottom);
+            Point bottomRight = new Point(proposedBounds.Right, proposedBounds.Bottom);
+            
+            // Check if each corner is within ANY walkable area
+            bool topLeftValid = false;
+            bool topRightValid = false;
+            bool bottomLeftValid = false;
+            bool bottomRightValid = false;
+            
+            foreach (Rectangle bounds in walkableBounds)
+            {
+                if (bounds.Contains(topLeft))
+                    topLeftValid = true;
+                
+                if (bounds.Contains(topRight))
+                    topRightValid = true;
+                
+                if (bounds.Contains(bottomLeft))
+                    bottomLeftValid = true;
+                
+                if (bounds.Contains(bottomRight))
+                    bottomRightValid = true;
+                
+                // If all corners are valid, we can return early
+                if (topLeftValid && topRightValid && bottomLeftValid && bottomRightValid)
+                    return true;
+            }
+            
+            // Movement is valid only if all corners are within some walkable area
+            return topLeftValid && topRightValid && bottomLeftValid && bottomRightValid;
         }
     }
 } 
