@@ -51,7 +51,7 @@ This main game class uses the StateManager to control which states are active an
 
 The `StateManager` class provides a mechanism for handling different game states and transitions between them:
 
-- **States**: MainMenu, Gameplay, Paused
+- **States**: MainMenu, Gameplay, Paused, GameOver
 - **Current State**: Tracks which state is active
 - **State Transitions**: Handles switching between states with appropriate events
 
@@ -73,23 +73,52 @@ The `Player` class handles player-specific behaviors:
 
 - **Position and Sprite**: Basic rendering properties
 - **Movement**: Direction-based movement with speed control
+- **Health System**: CurrentHealth and MaxHealth tracking with damage handling
 - **Attack System**: Temporary hitbox creation in facing direction
 - **Dodge System**: Temporary speed boost and invincibility
 - **Aetherium Essence**: Resource used for weaving abilities
 - **Buff System**: Tracks active buffs (currently only damage buff)
 - **State Management**: Tracking attack, dodge, and buff states
+- **Visual Feedback**: Visual indicators for damage, invincibility, and buff states
 
 ### 3.5 Combat System
 
 The combat system consists of several components working together:
 
 - **Collision Detection**: AABB (Axis-Aligned Bounding Box) collision checks via CollisionUtility
-- **Attack Mechanics**: Temporary hitboxes created in player's facing direction
-- **Damage System**: Health tracking and damage application to enemies
-- **Invincibility Frames**: Temporary invulnerability during dodge actions
-- **Buff Effects**: Damage multipliers applied when buffs are active
+- **Attack Mechanics**: Temporary hitboxes created in player's and enemy's facing direction
+- **Damage System**: Health tracking and damage application to enemies and player
+- **Invincibility Frames**: Temporary invulnerability during dodge actions and after taking damage
+- **Death Handling**: GameOver state transition when player health reaches zero
 
-### 3.6 Dungeon Generation System
+### 3.6 Enemy Entity (Enemy.cs)
+
+The `Enemy` class handles enemy-specific behaviors:
+
+- **Basic Properties**: Position, sprite, health, and active state
+- **AI Movement**: Detection range and player-seeking behavior
+- **AI Combat**: Attack range, cooldown, and attack hitbox generation
+- **State Management**: Tracking attack state and cooldowns
+- **Death Handling**: Resource rewards and deactivation upon defeat
+
+### 3.7 Game State Flow
+
+The game state flow has been expanded to include:
+
+- **Main Menu**: Starting point for the game (currently placeholder)
+- **Gameplay**: Active gameplay with player control and enemy interactions
+- **Paused**: Temporarily halts gameplay updates but maintains visual state
+- **Game Over**: Displayed when player health reaches zero, with restart option
+
+**Game Over Flow**:
+1. Player health reaches zero
+2. StateManager transitions to GameOver state
+3. Game halts normal updates but displays Game Over screen
+4. Player can press 'E' to restart
+5. Game resets player health, enemy state, and regenerates dungeon
+6. StateManager transitions back to Gameplay state
+
+### 3.8 Dungeon Generation System
 
 The dungeon generation system creates and manages the game's level structure:
 
@@ -113,7 +142,7 @@ The current implementation uses a simplified placeholder approach:
 
 The placeholder system is designed to be replaced with proper procedural generation in future iterations, maintaining the same interface so game code won't need major changes.
 
-### 3.7 Aetherium Weaving System
+### 3.9 Aetherium Weaving System
 
 The Aetherium Weaving system is the core game mechanic that allows players to spend collected essence to gain temporary buffs:
 

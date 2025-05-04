@@ -43,12 +43,17 @@ namespace AetheriumDepths
         private const float PlayerSpeed = 200f; // Pixels per second
         private const int EnemyHealth = 3; // Default enemy health
         private const int AttackDamage = 1; // Default attack damage
+        private const int EnemyTouchDamage = 10; // Damage dealt when enemy touches player
         private const int DamageBuffMultiplier = 2; // Damage multiplier when buff is active
         private const int AetheriumEssenceReward = 1; // Essence gained per enemy defeated
         private const int AetheriumWeavingCost = 3; // Essence cost for activating a buff
         
         // Interaction constants
         private const float InteractionDistance = 50f; // Distance for interacting with objects
+        
+        // Player invincibility cooldown after taking damage
+        private const float DamageInvincibilityDuration = 1.0f; // Time in seconds
+        private float _damageInvincibilityTimer = 0f; // Current remaining invincibility time
 
         public AetheriumGame()
         {
@@ -223,6 +228,9 @@ namespace AetheriumDepths
                 case StateManager.GameState.Paused:
                     UpdatePaused(gameTime);
                     break;
+                case StateManager.GameState.GameOver:
+                    UpdateGameOver(gameTime);
+                    break;
             }
 
             base.Update(gameTime);
@@ -246,6 +254,9 @@ namespace AetheriumDepths
                     break;
                 case StateManager.GameState.Paused:
                     DrawPaused(gameTime);
+                    break;
+                case StateManager.GameState.GameOver:
+                    DrawGameOver(gameTime);
                     break;
             }
 
@@ -283,6 +294,12 @@ namespace AetheriumDepths
         private void UpdateGameplay(GameTime gameTime)
         {
             float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+            
+            // Update damage invincibility timer
+            if (_damageInvincibilityTimer > 0f)
+            {
+                _damageInvincibilityTimer -= deltaTime;
+            }
             
             // Get the movement vector from the input manager
             Vector2 movementVector = _inputManager.GetMovementVector();
@@ -323,6 +340,57 @@ namespace AetheriumDepths
                 }
             }
             
+            // Check for enemy collision with player (enemy touch damage)
+            if (!_player.IsInvincible && _damageInvincibilityTimer <= 0f)
+            {
+                // Check for enemy attack hitboxes
+                foreach (Enemy enemy in _enemies)
+                {
+                    if (enemy.IsActive && enemy.IsAttacking && 
+                        CollisionUtility.CheckAABBCollision(_player.Bounds, enemy.AttackHitbox))
+                    {
+                        // Player takes damage from enemy attack
+                        bool playerAlive = _player.TakeDamage(EnemyTouchDamage * 2); // Attacks deal double touch damage
+                        
+                        // Activate invincibility timer to prevent rapid damage
+                        _damageInvincibilityTimer = DamageInvincibilityDuration;
+                        
+                        // Check if player died
+                        if (!playerAlive)
+                        {
+                            Console.WriteLine("Player died from enemy attack!");
+                            // Transition to GameOver state
+                            _stateManager.ChangeState(StateManager.GameState.GameOver);
+                        }
+                        
+                        break; // Only take damage from one enemy per frame
+                    }
+                }
+                
+                // Check for direct enemy collision (touch damage)
+                foreach (Enemy enemy in _enemies)
+                {
+                    if (enemy.IsActive && CollisionUtility.CheckAABBCollision(_player.Bounds, enemy.Bounds))
+                    {
+                        // Player takes damage from touching enemy
+                        bool playerAlive = _player.TakeDamage(EnemyTouchDamage);
+                        
+                        // Activate invincibility timer to prevent rapid damage
+                        _damageInvincibilityTimer = DamageInvincibilityDuration;
+                        
+                        // Check if player died
+                        if (!playerAlive)
+                        {
+                            Console.WriteLine("Player died!");
+                            // Transition to GameOver state
+                            _stateManager.ChangeState(StateManager.GameState.GameOver);
+                        }
+                        
+                        break; // Only take damage from one enemy per frame
+                    }
+                }
+            }
+            
             // Check for attack collision with enemies
             if (_player.IsAttacking)
             {
@@ -354,12 +422,31 @@ namespace AetheriumDepths
             // Clean up inactive enemies (not needed with a single enemy, but good practice)
             _enemies.RemoveAll(enemy => !enemy.IsActive);
             
+            // Update enemies
+            foreach (Enemy enemy in _enemies)
+            {
+                enemy.Update(_player.Position, deltaTime);
+            }
+            
             Console.WriteLine($"Updating Gameplay state: {gameTime.TotalGameTime}, Player at: {_player.Position}");
         }
 
         private void UpdatePaused(GameTime gameTime)
         {
             Console.WriteLine($"Updating Paused state: {gameTime.TotalGameTime}");
+        }
+
+        private void UpdateGameOver(GameTime gameTime)
+        {
+            // Check for restart input
+            if (_inputManager.IsActionJustPressed(InputManager.GameAction.Interact))
+            {
+                // Reset the game and return to Gameplay state
+                ResetGame();
+                _stateManager.ChangeState(StateManager.GameState.Gameplay);
+            }
+            
+            Console.WriteLine($"Updating GameOver state: {gameTime.TotalGameTime}");
         }
 
         private void DrawMainMenu(GameTime gameTime)
@@ -379,10 +466,12 @@ namespace AetheriumDepths
             foreach (Enemy enemy in _enemies)
             {
                 enemy.Draw(_spriteBatch);
+                // Draw enemy attack hitbox if attacking (for debugging)
+                enemy.DrawAttackHitbox(_spriteBatch, _debugTexture);
             }
             
             // Draw the player
-            _player.Draw(_spriteBatch);
+            _player.Draw(_spriteBatch, _damageInvincibilityTimer);
             
             // Draw attack hitbox if attacking (for debugging)
             _player.DrawAttackHitbox(_spriteBatch, _debugTexture);
@@ -451,6 +540,54 @@ namespace AetheriumDepths
             _player.Draw(_spriteBatch);
             
             Console.WriteLine($"Drawing Paused state: {gameTime.TotalGameTime}");
+        }
+
+        private void DrawGameOver(GameTime gameTime)
+        {
+            // Draw the "Game Over" text in the center of the screen
+            string gameOverText = "GAME OVER - Press 'E' to restart";
+            Vector2 textSize = new Vector2(300, 50); // Approximate size, would use font.MeasureString in a real game
+            
+            Vector2 position = new Vector2(
+                (GraphicsDevice.Viewport.Width - textSize.X) / 2,
+                (GraphicsDevice.Viewport.Height - textSize.Y) / 2);
+            
+            // Draw a background rectangle for the text
+            Rectangle textBg = new Rectangle(
+                (int)position.X - 10,
+                (int)position.Y - 10,
+                (int)textSize.X + 20,
+                (int)textSize.Y + 20);
+            
+            _spriteBatch.Draw(_debugTexture, textBg, new Color(0, 0, 0, 180));
+            
+            // Would draw the text with a font here
+            // _spriteBatch.DrawString(font, gameOverText, position, Color.White);
+            
+            Console.WriteLine($"Drawing GameOver state: {gameTime.TotalGameTime}");
+        }
+        
+        /// <summary>
+        /// Resets the game state for a new game.
+        /// </summary>
+        private void ResetGame()
+        {
+            // Reset player health
+            if (_player != null)
+            {
+                // Because we don't have a direct way to reset health, recreate the player
+                Vector2 position = _player.Position;
+                Texture2D sprite = _player.Sprite;
+                _player = new Player(position, sprite);
+            }
+            
+            // Reset damage invincibility timer
+            _damageInvincibilityTimer = 0f;
+            
+            // Generate a new dungeon with new entity positions
+            GenerateDungeon();
+            
+            Console.WriteLine("Game reset for a new run");
         }
 
         #endregion

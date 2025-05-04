@@ -46,6 +46,16 @@ namespace AetheriumDepths.Entities
         public bool HasDamageBuff { get; private set; } = false;
 
         /// <summary>
+        /// The player's current health points.
+        /// </summary>
+        public int CurrentHealth { get; private set; }
+
+        /// <summary>
+        /// The player's maximum health points.
+        /// </summary>
+        public int MaxHealth { get; private set; } = 100; // Default max health
+
+        /// <summary>
         /// Flag indicating if an attack is currently active.
         /// </summary>
         public bool IsAttacking { get; private set; }
@@ -104,6 +114,8 @@ namespace AetheriumDepths.Entities
         {
             Position = position;
             Sprite = sprite;
+            CurrentHealth = MaxHealth; // Initialize current health to max health
+            Console.WriteLine($"Player created with {CurrentHealth}/{MaxHealth} health");
         }
 
         /// <summary>
@@ -228,6 +240,32 @@ namespace AetheriumDepths.Entities
         }
 
         /// <summary>
+        /// Reduces the player's health by the specified amount.
+        /// </summary>
+        /// <param name="damage">The amount of damage to take.</param>
+        /// <returns>True if player is still alive after taking damage; false if player died.</returns>
+        public bool TakeDamage(int damage)
+        {
+            if (IsInvincible)
+            {
+                Console.WriteLine("Player is invincible, no damage taken");
+                return true;
+            }
+            
+            CurrentHealth -= damage;
+            Console.WriteLine($"Player took {damage} damage! Health: {CurrentHealth}/{MaxHealth}");
+            
+            // Prevent health from going below 0
+            if (CurrentHealth < 0)
+            {
+                CurrentHealth = 0;
+            }
+            
+            // Return whether the player is still alive
+            return CurrentHealth > 0;
+        }
+
+        /// <summary>
         /// Activates the damage buff when interacting with a weaving altar.
         /// </summary>
         /// <param name="essenceCost">Amount of essence required to activate the buff.</param>
@@ -250,7 +288,8 @@ namespace AetheriumDepths.Entities
         /// Draws the player to the screen.
         /// </summary>
         /// <param name="spriteBatch">The sprite batch to use for drawing.</param>
-        public void Draw(SpriteBatch spriteBatch)
+        /// <param name="damageInvincibility">Optional timer for damage invincibility.</param>
+        public void Draw(SpriteBatch spriteBatch, float damageInvincibility = 0f)
         {
             // Apply appropriate color based on player state
             Color playerColor;
@@ -259,6 +298,14 @@ namespace AetheriumDepths.Entities
             {
                 // Semi-transparent when invincible (dodge)
                 playerColor = new Color(255, 255, 255, 150);
+            }
+            else if (damageInvincibility > 0f)
+            {
+                // Flash red when in damage invincibility state
+                // Use a pulsing effect based on the timer
+                float pulseRate = 10f; // Flashing speed
+                float alpha = 0.7f + (float)Math.Sin(damageInvincibility * pulseRate) * 0.3f;
+                playerColor = new Color(255, 100, 100, (int)(255 * alpha));
             }
             else if (HasDamageBuff)
             {

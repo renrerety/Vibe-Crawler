@@ -351,3 +351,69 @@ Based on our implementation plan, the following items should be prioritized for 
 - Create UX flow diagrams for the weaving interface
 
 This todo list will guide our development efforts as we move into the next phase of the Aetherium Depths project.
+
+## Phase 6: Core Gameplay Expansion
+
+**Date:** 2025-05-09
+
+### Current Progress
+
+#### Phase 6.1: Player Health & Basic Enemy Threat (COMPLETED)
+
+**Summary:**
+Successfully implemented player health mechanics, enemy AI with attack behavior, and a fully functional combat system. This includes adding health tracking for the player, enemy movement AI, attack capabilities, and proper game over state handling.
+
+**Achievements:**
+1. **Player Health System**
+   - Added `CurrentHealth` and `MaxHealth` properties to the Player class
+   - Implemented health initialization at player creation
+   - Created `TakeDamage` method with invincibility checks
+   - Added visual feedback for player damage state
+
+2. **Enemy Damage Mechanics**
+   - Implemented touch damage when player collides with enemies
+   - Added damage invincibility cooldown to prevent rapid health drain
+   - Created pulsing red visual effect during damage invincibility
+
+3. **Player Death & Game Over State**
+   - Added GameOver state to StateManager
+   - Implemented death detection when player health reaches zero
+   - Created Game Over screen with restart functionality
+   - Added game state reset logic for new game sessions
+
+4. **Enemy AI - Movement**
+   - Implemented detection range for enemy awareness
+   - Added directional movement toward player when in range
+   - Created proper facing direction updates for enemies
+   - Implemented frame-rate independent movement
+
+5. **Enemy AI - Attack**
+   - Implemented attack range detection
+   - Added attack cooldown and duration timers
+   - Created enemy attack hitboxes with proper positioning
+   - Added visual debugging for attack ranges
+
+6. **Integrated Combat System**
+   - Implemented enemy attack collision with player
+   - Added player damage from both touch and attack hitboxes
+   - Created layered invincibility checks (dodge and damage cooldown)
+   - Balanced damage values to create appropriate challenge
+
+**Technical Details:**
+- Used property-based health system with encapsulated modification methods
+- Implemented frame-independent timer system for cooldowns and durations
+- Created clear visual feedback for different player states
+- Used vector-based movement and targeting for enemy AI
+- Implemented Rectangle-based collision detection for precise hit detection
+- Created state transition system for Game Over handling
+
+**Next Steps:**
+- Proceed to Phase 6.2: Foundational Procedural Dungeon Generation
+  - Implement BSP Tree generation algorithm
+  - Create room generation from BSP leaves
+  - Add corridor connections between rooms
+  - Adapt entity placement to work with dynamic dungeon layouts
+
+**Documentation:**
+- Updated architecture.md with player health, enemy AI, and combat system details
+- Documented the Game Over state handling and game reset process

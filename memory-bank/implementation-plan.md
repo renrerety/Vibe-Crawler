@@ -149,6 +149,104 @@ Okay, AI developers, let's build the core foundation for "Aetherium Depths". Fol
 
 This completes the core MVP implementation. Future phases will build upon this foundation, adding more complex generation, enemy AI, diverse loot, the Hub, meta-progression, proper UI, mobile controls, and full Aetherium Weaving options. Remember to update `@architecture.md` at the completion of each major phase as indicated.
 
+
+Okay, AI developers, based on the successful completion of the core MVP (Phases 1-5) documented in `@progress.md` and the architecture outlined in `@architecture.md`, we are ready to proceed to the next phase. This phase focuses on significantly enhancing the core gameplay experience by implementing true procedural generation, expanding combat mechanics, fleshing out the Aetherium Weaving system, and adding essential UI feedback.
+
+**Phase 6 Goal:** Transform the placeholder systems into dynamic core gameplay loops. Players should experience varied dungeon layouts, face tangible threats with basic AI, manage their health, and utilize a more developed Aetherium Weaving system with immediate UI feedback.
+
+Remember to **always** consult `@architecture.md` and `@progress.md` before implementing any step. Adhere to the modular structure and update `@architecture.md` after completing significant parts of this phase, especially regarding the new generation algorithm and expanded combat/weaving systems.
+
+## Implementation Plan: Aetherium Depths - Phase 6: Core Gameplay Expansion
+
+**Phase 6.1: Player Health & Basic Enemy Threat**
+
+1.  **Step 6.1.1: Implement Player Health**
+    *   **Instruction:** Add `CurrentHealth` and `MaxHealth` properties to the `Player` class. Initialize `CurrentHealth` to `MaxHealth` upon player creation/spawn.
+    *   **Validation:** Log the player's `CurrentHealth` to the console. Confirm it initializes correctly.
+
+2.  **Step 6.1.2: Implement Basic Enemy Damage**
+    *   **Instruction:** Modify the `Enemy` class or combat logic. For now, implement simple "touch" damage: if the player's bounds collide with an active enemy's bounds (using `CollisionUtility.AABB`), reduce the player's `CurrentHealth` by a fixed amount. Implement a short cooldown after taking damage (invincibility frames, similar to the dodge) to prevent rapid health drain from continuous contact.
+    *   **Validation:** Move the player sprite to overlap with an enemy sprite. Observe console logs showing the player's `CurrentHealth` decreasing. Confirm the player doesn't take damage repeatedly during the brief invincibility cooldown after being hit.
+
+3.  **Step 6.1.3: Implement Player Death State**
+    *   **Instruction:** In the `Gameplay` state `Update` loop, check if `Player.CurrentHealth` is less than or equal to 0. If so, trigger a state change using the `StateManager` to a new `GameOver` state (create a basic placeholder state that perhaps just displays text or halts gameplay updates).
+    *   **Validation:** Allow the player to take damage until health reaches zero. Confirm the game transitions to the `GameOver` state, and gameplay updates (like player movement) cease.
+
+4.  **Step 6.1.4: Implement Basic Enemy AI - Movement**
+    *   **Instruction:** Add basic AI behavior to the `Enemy` class's `Update` method. Define a "detection range". If the player is within this range, calculate the direction vector from the enemy to the player and move the enemy along this vector at a defined speed (using `gameTime` for frame independence). If the player is outside the range, the enemy remains stationary (or performs a simple idle behavior later).
+    *   **Validation:** Place an enemy and move the player within its detection range. Observe the enemy sprite moving towards the player sprite. Move the player outside the range; observe the enemy stopping.
+
+5.  **Step 6.1.5: Implement Basic Enemy AI - Attack**
+    *   **Instruction:** Add a simple attack cooldown timer to the `Enemy`. If the player is within a smaller "attack range" *and* the cooldown is ready, trigger an attack:
+        *   Create a temporary melee attack hitbox (similar to player's, Step 3.2) in the direction of the player.
+        *   Start the attack cooldown timer.
+        *   (Temporarily disable touch damage from Step 6.1.2 if implementing hitbox damage now, or keep both if desired).
+    *   **Validation:** Move the player within the enemy's attack range. Observe the enemy periodically creating its attack hitbox (visible via debug rendering). Ensure the attack only occurs when the cooldown is ready.
+
+6.  **Step 6.1.6: Integrate Enemy Attack with Player Damage**
+    *   **Instruction:** In the `Gameplay` `Update` loop, check if an active enemy attack hitbox collides with the player's bounds. If it does *and* the player is not invincible (e.g., from their dodge or post-hit cooldown), reduce the player's `CurrentHealth`. Deactivate the *specific* enemy attack hitbox immediately upon successful hit to prevent multiple damage instances from one attack animation/hitbox duration.
+    *   **Validation:** Let an enemy attack the player. Confirm the player's `CurrentHealth` decreases only when the enemy's attack hitbox connects and the player is not invincible.
+
+**Phase 6.2: Foundational Procedural Dungeon Generation**
+
+1.  **Step 6.2.1: Implement BSP Tree Generation Core**
+    *   **Instruction:** In the `DungeonGenerator` class, implement the core logic for Binary Space Partitioning (BSP). Create a method that takes a rectangular area and recursively splits it either horizontally or vertically into two sub-areas, based on certain criteria (e.g., random split point within bounds, minimum room size). Store this division in a tree structure (Node class with references to left/right children and its `Rectangle` area).
+    *   **Validation:** Call the BSP generation method with initial bounds. Debug print or visualize the resulting tree structure and the `Rectangle` areas associated with each node. Confirm the space is recursively partitioned correctly down to minimum size constraints.
+
+2.  **Step 6.2.2: Generate Rooms from BSP Leaves**
+    *   **Instruction:** Traverse the generated BSP tree. For each leaf node (a node with no children), create a `Room` object. The room's bounds should be a slightly smaller `Rectangle` placed randomly (or centered with padding) *within* the leaf node's partition area. Add these generated `Room` objects to the `Dungeon`'s list.
+    *   **Validation:** After generating the BSP tree, call the room creation logic. Verify that the `Dungeon` object contains a list of `Room` objects whose bounds are correctly situated within the BSP leaf partitions. Debug render the leaf partitions and the rooms inside them to visually confirm.
+
+3.  **Step 6.2.3: Implement Basic Corridor Connection**
+    *   **Instruction:** Implement a simple algorithm to connect the generated rooms. For example, connect the centers of sibling rooms in the BSP tree, or connect adjacent rooms by finding the closest points between their bounds. Store corridor data (e.g., a list of `Rectangle` segments or start/end points). Do not worry about complex pathfinding yet.
+    *   **Validation:** Debug render the generated rooms and the calculated corridor paths between them. Visually confirm that rooms are logically connected.
+
+4.  **Step 6.2.4: Integrate Generated Dungeon**
+    *   **Instruction:** Modify the `Gameplay` state initialization to call the *new* `DungeonGenerator` methods (BSP, room creation, corridors). Replace the placeholder dungeon rendering with logic that renders the newly generated rooms and corridors. Adjust player collision logic to potentially account for corridor areas if necessary (or simply ensure player stays within room bounds for now).
+    *   **Validation:** Start a new game multiple times. Observe a different, randomly generated layout of rooms and corridors rendered each time.
+
+5.  **Step 6.2.5: Adapt Entity Spawning**
+    *   **Instruction:** Update the spawning logic. Place the player in a designated starting room (e.g., the first room generated or a room tagged as 'start'). Distribute enemies and the Weaving Altar randomly among the *other* generated rooms, ensuring they spawn within room bounds.
+    *   **Validation:** Start new games. Confirm the player always starts inside a valid room. Confirm enemies and the altar appear in different, valid room locations across different generated dungeons.
+
+**Phase 6.3: Aetherium Weaving Expansion**
+
+1.  **Step 6.3.1: Implement Buff Duration**
+    *   **Instruction:** Add a `Duration` timer property (e.g., a `float` storing remaining seconds) to the concept of an active buff on the `Player`. When a buff is activated (Step 5.4), set its timer. In the `Player`'s `Update` method, decrement the timer for active buffs using `gameTime.ElapsedGameTime.TotalSeconds`. If a timer reaches zero or below, deactivate the corresponding buff flag (e.g., `HasDamageBuff = false`).
+    *   **Validation:** Activate the damage buff via the altar. Observe (via logging or debug display) that the buff flag turns off automatically after the specified duration. Confirm the damage multiplier stops applying after expiration.
+
+2.  **Step 6.3.2: Implement Additional Buff Type (Speed)**
+    *   **Instruction:** Add a `HasSpeedBuff` flag and a corresponding `SpeedBuffDuration` timer to the `Player`. Modify the player movement calculation (Step 2.3) to increase movement speed by a multiplier if `HasSpeedBuff` is true.
+    *   **Validation:** Activate the (currently hardcoded or debug-selectable) speed buff. Observe the player sprite moving noticeably faster. Confirm the speed returns to normal after the duration expires.
+
+3.  **Step 6.3.3: Implement Basic Buff Selection at Altar**
+    *   **Instruction:** Modify the Weaving Altar interaction logic (Step 5.4). When interaction occurs, instead of automatically activating the damage buff, check for specific debug key presses (e.g., '1' for Damage Buff, '2' for Speed Buff). If the corresponding key is pressed and the player has enough essence, deduct the cost and activate *only* the selected buff with its duration.
+    *   **Validation:** Interact with the altar. Press '1' - confirm essence is deducted and damage buff activates/timer starts. Interact again. Press '2' - confirm essence is deducted and speed buff activates/timer starts. Ensure activating one doesn't activate the other unless intended and paid for separately.
+
+4.  **Step 6.3.4: Ensure Independent Buff Timers**
+    *   **Instruction:** Verify that the duration timers for different buffs are tracked and decremented independently. Update the buff management logic to handle multiple potentially active buffs concurrently.
+    *   **Validation:** Activate the damage buff. While it's active, activate the speed buff. Confirm both buffs are active simultaneously (player moves faster *and* deals more damage). Observe each buff expiring individually according to its own timer.
+
+**Phase 6.4: Core UI Implementation (HUD)**
+
+1.  **Step 6.4.1: Create Basic UI Rendering Layer**
+    *   **Instruction:** Establish a simple UI rendering system. This might involve creating a `UIManager` class or simply adding a dedicated drawing section in the `Gameplay` state's `Draw` method that uses `SpriteBatch` with screen-space coordinates (unaffected by camera). Load a basic font (`SpriteFont`) via the Content Pipeline.
+    *   **Validation:** Draw simple static text (e.g., "Health:") at a fixed screen position using the loaded font. Confirm it appears correctly overlaid on the gameplay scene.
+
+2.  **Step 6.4.2: Render Player Health**
+    *   **Instruction:** In the UI rendering layer, draw the player's `CurrentHealth` and `MaxHealth` values as text (e.g., "Health: 75/100"). Alternatively, draw a simple health bar (e.g., two overlapping rectangles drawn with `SpriteBatch` - background red, foreground green scaled by `CurrentHealth / MaxHealth`).
+    *   **Validation:** The UI accurately reflects the player's current and max health. Observe the UI updating in real-time as the player takes damage.
+
+3.  **Step 6.4.3: Render Aetherium Essence**
+    *   **Instruction:** In the UI rendering layer, draw the player's current `AetheriumEssence` count as text (e.g., "Essence: 15").
+    *   **Validation:** The UI accurately displays the player's essence count. Observe the count increasing in real-time when the player collects essence (defeats enemies).
+
+4.  **Step 6.4.4: Render Active Buff Indicators**
+    *   **Instruction:** In the UI rendering layer, check which buffs are currently active on the player. For each active buff, display a simple indicator (e.g., small icon loaded via Content Pipeline, or text like "DMG UP", "SPD UP") along with its remaining duration (formatted to one decimal place, e.g., "4.2s"). Position these indicators clearly on the HUD.
+    *   **Validation:** Activate buffs via the altar. Observe the corresponding indicators appearing on the HUD with the correct remaining time. Confirm indicators disappear when buffs expire and timers update smoothly.
+
+This concludes the plan for Phase 6. It focuses on making the core loop engaging and laying the groundwork for further expansion based on actual procedural content and more dynamic combat and systems. Remember to rigorously validate each step and keep the codebase modular. Good luck!
+
 **Important Notes:**
 - Focus on correctness over speed - there are no set timeframes per phase. Ensure each step works properly before proceeding.
 - Use simple PNG files for placeholder assets, processed through the MonoGame content pipeline.

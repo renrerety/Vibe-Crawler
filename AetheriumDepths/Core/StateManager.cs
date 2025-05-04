@@ -21,7 +21,8 @@ namespace AetheriumDepths.Core
         {
             MainMenu,
             Gameplay,
-            Paused
+            Paused,
+            GameOver
         }
 
         /// <summary>

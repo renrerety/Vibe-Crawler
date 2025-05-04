@@ -1,5 +1,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 
 namespace AetheriumDepths.Entities
 {
@@ -37,6 +38,61 @@ namespace AetheriumDepths.Entities
         /// Inactive enemies are scheduled for removal.
         /// </summary>
         public bool IsActive { get; private set; } = true;
+        
+        /// <summary>
+        /// The range at which the enemy detects and pursues the player.
+        /// </summary>
+        public float DetectionRange { get; set; } = 200f;
+        
+        /// <summary>
+        /// The range at which the enemy can attack the player.
+        /// </summary>
+        public float AttackRange { get; set; } = 60f;
+        
+        /// <summary>
+        /// The movement speed of the enemy in pixels per second.
+        /// </summary>
+        public float MovementSpeed { get; set; } = 100f;
+        
+        /// <summary>
+        /// The direction the enemy is currently facing.
+        /// </summary>
+        public Vector2 FacingDirection { get; private set; } = new Vector2(0, 1); // Default facing down
+        
+        /// <summary>
+        /// Flag indicating if an attack is currently active.
+        /// </summary>
+        public bool IsAttacking { get; private set; }
+        
+        /// <summary>
+        /// The hitbox for the current attack.
+        /// </summary>
+        public Rectangle AttackHitbox { get; private set; }
+        
+        /// <summary>
+        /// Timer for the duration of the attack.
+        /// </summary>
+        private float _attackTimer;
+        
+        /// <summary>
+        /// Duration of the attack in seconds.
+        /// </summary>
+        private const float ATTACK_DURATION = 0.3f;
+        
+        /// <summary>
+        /// Cooldown timer between attacks.
+        /// </summary>
+        private float _attackCooldownTimer;
+        
+        /// <summary>
+        /// Cooldown duration between attacks in seconds.
+        /// </summary>
+        private const float ATTACK_COOLDOWN = 1.5f;
+        
+        /// <summary>
+        /// The size of the attack hitbox.
+        /// </summary>
+        private const int ATTACK_SIZE = 32;
 
         /// <summary>
         /// Creates a new enemy at the specified position.
@@ -49,6 +105,89 @@ namespace AetheriumDepths.Entities
             Position = position;
             Sprite = sprite;
             Health = health;
+            
+            // Initialize attack cooldown as ready to attack
+            _attackCooldownTimer = 0f;
+        }
+
+        /// <summary>
+        /// Updates the enemy state and behavior.
+        /// </summary>
+        /// <param name="playerPosition">The current position of the player.</param>
+        /// <param name="deltaTime">Time elapsed since the last update.</param>
+        public void Update(Vector2 playerPosition, float deltaTime)
+        {
+            if (!IsActive) return;
+            
+            // Update attack timer if an attack is active
+            if (IsAttacking)
+            {
+                _attackTimer -= deltaTime;
+                if (_attackTimer <= 0f)
+                {
+                    IsAttacking = false;
+                }
+            }
+            
+            // Update attack cooldown timer
+            if (_attackCooldownTimer > 0f)
+            {
+                _attackCooldownTimer -= deltaTime;
+            }
+            
+            // Calculate distance to player
+            Vector2 directionToPlayer = playerPosition - Position;
+            float distanceToPlayer = directionToPlayer.Length();
+            
+            // If player is within attack range and cooldown is ready, attack
+            if (distanceToPlayer <= AttackRange && _attackCooldownTimer <= 0f && !IsAttacking)
+            {
+                Attack(directionToPlayer);
+            }
+            // Otherwise, if player is within detection range but outside attack range, move towards them
+            else if (distanceToPlayer <= DetectionRange && distanceToPlayer > AttackRange && !IsAttacking)
+            {
+                // Normalize direction vector
+                if (distanceToPlayer > 0)
+                {
+                    directionToPlayer = Vector2.Normalize(directionToPlayer);
+                    FacingDirection = directionToPlayer;
+                }
+                
+                // Move towards player
+                Position += directionToPlayer * MovementSpeed * deltaTime;
+            }
+        }
+        
+        /// <summary>
+        /// Initiates an attack in the direction of the player.
+        /// </summary>
+        /// <param name="directionToPlayer">Direction vector pointing to the player.</param>
+        private void Attack(Vector2 directionToPlayer)
+        {
+            // Start attack
+            IsAttacking = true;
+            _attackTimer = ATTACK_DURATION;
+            _attackCooldownTimer = ATTACK_COOLDOWN;
+            
+            // Normalize direction if it's not already
+            if (directionToPlayer.Length() > 0)
+            {
+                directionToPlayer = Vector2.Normalize(directionToPlayer);
+                FacingDirection = directionToPlayer;
+            }
+            
+            // Calculate attack hitbox position based on enemy position and facing direction
+            Vector2 hitboxCenter = Position + (FacingDirection * (Sprite.Width + ATTACK_SIZE) / 2);
+            
+            // Create attack hitbox
+            AttackHitbox = new Rectangle(
+                (int)(hitboxCenter.X - ATTACK_SIZE / 2),
+                (int)(hitboxCenter.Y - ATTACK_SIZE / 2),
+                ATTACK_SIZE,
+                ATTACK_SIZE);
+            
+            Console.WriteLine($"Enemy attacked in direction {FacingDirection}");
         }
 
         /// <summary>
@@ -78,6 +217,11 @@ namespace AetheriumDepths.Entities
                 Health = health;
             }
             
+            // Reset attack state
+            IsAttacking = false;
+            _attackTimer = 0f;
+            _attackCooldownTimer = 0f;
+            
             // Set active state to true
             IsActive = true;
         }
@@ -91,6 +235,19 @@ namespace AetheriumDepths.Entities
             if (IsActive)
             {
                 spriteBatch.Draw(Sprite, Position, Color.White);
+            }
+        }
+        
+        /// <summary>
+        /// Draws the attack hitbox for debugging purposes.
+        /// </summary>
+        /// <param name="spriteBatch">The sprite batch to use for drawing.</param>
+        /// <param name="debugTexture">A solid color texture for drawing the hitbox.</param>
+        public void DrawAttackHitbox(SpriteBatch spriteBatch, Texture2D debugTexture)
+        {
+            if (IsAttacking)
+            {
+                spriteBatch.Draw(debugTexture, AttackHitbox, Color.Red * 0.5f);
             }
         }
     }
