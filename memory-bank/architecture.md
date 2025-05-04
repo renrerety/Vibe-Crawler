@@ -177,19 +177,40 @@ The Aetherium Weaving system is the core game mechanic that allows players to sp
 - **Aetherium Essence**: A resource collected from defeated enemies
 - **Weaving Altar**: An interactive object where weaving can be performed
 - **Interaction System**: AABB collision-based detection for altar interaction
-- **Buff Effects**: Currently only a damage buff that multiplies attack damage
+- **Buff System**: Multiple buff types (damage, speed) with independent durations
 - **Visual Feedback**: Color changes on the player sprite to indicate active buffs
+- **Buff UI**: Simple interface elements showing active buffs and their remaining duration
 
 #### Weaving Implementation
 
-The current implementation provides the minimal core hook for the Aetherium Weaving system:
+The current implementation provides a functional foundation for the Aetherium Weaving system:
+
 1. The `Player` class tracks `AetheriumEssence` collected from defeated enemies
 2. Defeating an enemy grants a fixed amount of essence
 3. The `WeavingAltar` class represents a physical location where weaving can occur
-4. When the player is near the altar and presses the Interact key (E), essence can be spent
-5. If the player has sufficient essence, it's deducted and the damage buff is activated
-6. The active buff applies a multiplier to attack damage
-7. The player's sprite changes color (yellow) to indicate the active buff
+4. When the player is near the altar and presses the Interact key (E), a buff selection is presented
+5. Pressing a number key (1 for damage, 2 for speed) while interacting will activate the corresponding buff
+6. If the player has sufficient essence, it's deducted and the selected buff is activated with a duration
+7. The active buffs apply modifiers to player capabilities:
+   - Damage buff: Multiplies attack damage
+   - Speed buff: Increases movement speed
+8. Buffs expire automatically after their duration ends
+9. The player's sprite changes color to indicate buff status:
+   - Yellow: Damage buff active
+   - Green: Speed buff active
+   - Orange: Both buffs active
+10. UI elements display active buffs with their remaining durations
+
+#### Buff Management System
+
+The buff management system supports independent tracking of multiple buff types:
+
+1. Each buff type has a dedicated duration timer tracked in the `Player` class
+2. Duration timers are decremented each frame using delta time for frame-rate independence
+3. When a timer reaches zero, the corresponding buff is automatically deactivated
+4. The `BuffType` enum allows for easy identification and future expansion of buff types
+5. The `GetBuffDuration` method provides remaining time for display in the UI
+6. Visual indicators change based on the combination of active buffs
 
 ## 4. Data Flow
 

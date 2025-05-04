@@ -44,6 +44,31 @@ namespace AetheriumDepths.Entities
         /// Flag indicating if the player has an active damage buff from weaving.
         /// </summary>
         public bool HasDamageBuff { get; private set; } = false;
+        
+        /// <summary>
+        /// Remaining duration of the damage buff in seconds.
+        /// </summary>
+        private float _damageBuffDuration = 0f;
+        
+        /// <summary>
+        /// Flag indicating if the player has an active speed buff from weaving.
+        /// </summary>
+        public bool HasSpeedBuff { get; private set; } = false;
+        
+        /// <summary>
+        /// Remaining duration of the speed buff in seconds.
+        /// </summary>
+        private float _speedBuffDuration = 0f;
+        
+        /// <summary>
+        /// Duration of activated buffs in seconds.
+        /// </summary>
+        private const float BUFF_DURATION = 10f;
+        
+        /// <summary>
+        /// Speed multiplier when speed buff is active.
+        /// </summary>
+        private const float SPEED_BUFF_MULTIPLIER = 1.5f;
 
         /// <summary>
         /// The player's current health points.
@@ -130,6 +155,12 @@ namespace AetheriumDepths.Entities
             // Apply movement
             float effectiveSpeed = speed;
             
+            // Apply speed buff if active
+            if (HasSpeedBuff)
+            {
+                effectiveSpeed *= SPEED_BUFF_MULTIPLIER;
+            }
+            
             // Apply dodge speed boost if dodging
             if (IsDodging)
             {
@@ -160,7 +191,7 @@ namespace AetheriumDepths.Entities
         }
 
         /// <summary>
-        /// Updates the player's state, including attack and dodge timers.
+        /// Updates the player's state, including attack, dodge, and buff timers.
         /// </summary>
         /// <param name="deltaTime">Time elapsed since the last update.</param>
         public void Update(float deltaTime)
@@ -182,6 +213,28 @@ namespace AetheriumDepths.Entities
                 if (_dodgeTimer <= 0f)
                 {
                     IsDodging = false;
+                }
+            }
+            
+            // Update damage buff duration if active
+            if (HasDamageBuff)
+            {
+                _damageBuffDuration -= deltaTime;
+                if (_damageBuffDuration <= 0f)
+                {
+                    HasDamageBuff = false;
+                    Console.WriteLine("Damage buff has expired");
+                }
+            }
+            
+            // Update speed buff duration if active
+            if (HasSpeedBuff)
+            {
+                _speedBuffDuration -= deltaTime;
+                if (_speedBuffDuration <= 0f)
+                {
+                    HasSpeedBuff = false;
+                    Console.WriteLine("Speed buff has expired");
                 }
             }
         }
@@ -276,12 +329,51 @@ namespace AetheriumDepths.Entities
             {
                 AetheriumEssence -= essenceCost;
                 HasDamageBuff = true;
-                Console.WriteLine($"Damage buff activated! Player now has {AetheriumEssence} Aetherium Essence");
+                _damageBuffDuration = BUFF_DURATION;
+                Console.WriteLine($"Damage buff activated for {BUFF_DURATION} seconds! Player now has {AetheriumEssence} Aetherium Essence");
                 return true;
             }
             
             Console.WriteLine($"Not enough essence to activate buff. Have {AetheriumEssence}, need {essenceCost}");
             return false;
+        }
+        
+        /// <summary>
+        /// Activates the speed buff when interacting with a weaving altar.
+        /// </summary>
+        /// <param name="essenceCost">Amount of essence required to activate the buff.</param>
+        /// <returns>True if the buff was activated; false if not enough essence.</returns>
+        public bool ActivateSpeedBuff(int essenceCost)
+        {
+            if (AetheriumEssence >= essenceCost)
+            {
+                AetheriumEssence -= essenceCost;
+                HasSpeedBuff = true;
+                _speedBuffDuration = BUFF_DURATION;
+                Console.WriteLine($"Speed buff activated for {BUFF_DURATION} seconds! Player now has {AetheriumEssence} Aetherium Essence");
+                return true;
+            }
+            
+            Console.WriteLine($"Not enough essence to activate buff. Have {AetheriumEssence}, need {essenceCost}");
+            return false;
+        }
+        
+        /// <summary>
+        /// Gets the remaining duration of a specific buff.
+        /// </summary>
+        /// <param name="buffType">The type of buff to check.</param>
+        /// <returns>The remaining duration in seconds, or 0 if the buff is not active.</returns>
+        public float GetBuffDuration(BuffType buffType)
+        {
+            switch (buffType)
+            {
+                case BuffType.Damage:
+                    return HasDamageBuff ? _damageBuffDuration : 0f;
+                case BuffType.Speed:
+                    return HasSpeedBuff ? _speedBuffDuration : 0f;
+                default:
+                    return 0f;
+            }
         }
 
         /// <summary>
@@ -307,10 +399,20 @@ namespace AetheriumDepths.Entities
                 float alpha = 0.7f + (float)Math.Sin(damageInvincibility * pulseRate) * 0.3f;
                 playerColor = new Color(255, 100, 100, (int)(255 * alpha));
             }
+            else if (HasDamageBuff && HasSpeedBuff)
+            {
+                // Orange tint when both buffs are active
+                playerColor = new Color(255, 165, 0);
+            }
             else if (HasDamageBuff)
             {
                 // Yellow tint when damage buff is active
                 playerColor = Color.Yellow;
+            }
+            else if (HasSpeedBuff)
+            {
+                // Green tint when speed buff is active
+                playerColor = Color.LightGreen;
             }
             else
             {
@@ -333,5 +435,14 @@ namespace AetheriumDepths.Entities
                 spriteBatch.Draw(debugTexture, AttackHitbox, Color.Red * 0.5f);
             }
         }
+    }
+    
+    /// <summary>
+    /// Types of buffs that can be applied to the player.
+    /// </summary>
+    public enum BuffType
+    {
+        Damage,
+        Speed
     }
 } 

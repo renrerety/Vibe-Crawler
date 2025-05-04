@@ -334,9 +334,25 @@ namespace AetheriumDepths
                 // Check if player is near the weaving altar
                 if (CollisionUtility.CheckAABBCollision(_player.Bounds, _weavingAltar.Bounds))
                 {
-                    // Try to activate damage buff by spending essence
-                    _player.ActivateDamageBuff(AetheriumWeavingCost);
-                    Console.WriteLine("Player interacted with weaving altar!");
+                    // Check for buff selection keys
+                    var keyboardState = Keyboard.GetState();
+                    
+                    if (keyboardState.IsKeyDown(Keys.D1))
+                    {
+                        // Try to activate damage buff by spending essence
+                        _player.ActivateDamageBuff(AetheriumWeavingCost);
+                        Console.WriteLine("Player tried to activate damage buff at altar!");
+                    }
+                    else if (keyboardState.IsKeyDown(Keys.D2))
+                    {
+                        // Try to activate speed buff by spending essence
+                        _player.ActivateSpeedBuff(AetheriumWeavingCost);
+                        Console.WriteLine("Player tried to activate speed buff at altar!");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Player interacted with weaving altar! Press 1 for Damage Buff or 2 for Speed Buff");
+                    }
                 }
             }
             
@@ -526,9 +542,52 @@ namespace AetheriumDepths
         /// </summary>
         private void DrawGameplayUI()
         {
-            // This is a placeholder for future UI implementation
-            // In a real game, you would draw text showing the essence count, buff icons, etc.
-            // For now, we'll leave this empty as UI is not part of the current task
+            // Draw a semitransparent background for UI elements
+            Rectangle uiBackground = new Rectangle(10, 10, 200, 120);
+            _spriteBatch.Draw(_debugTexture, uiBackground, new Color(0, 0, 0, 150));
+            
+            // Draw player health as a bar
+            Rectangle healthBarBackground = new Rectangle(20, 20, 180, 20);
+            Rectangle healthBarFill = new Rectangle(20, 20, (int)(180 * ((float)_player.CurrentHealth / _player.MaxHealth)), 20);
+            
+            // Background (red)
+            _spriteBatch.Draw(_debugTexture, healthBarBackground, new Color(100, 0, 0, 200));
+            // Fill (green)
+            _spriteBatch.Draw(_debugTexture, healthBarFill, new Color(0, 200, 0, 200));
+            
+            // Draw health text
+            // Would use SpriteBatch.DrawString with a SpriteFont in a full implementation
+            
+            // Draw Aetherium Essence count
+            Rectangle essenceIndicator = new Rectangle(20, 50, 10, 10);
+            _spriteBatch.Draw(_debugTexture, essenceIndicator, new Color(180, 100, 255, 255)); // Purple for essence
+            
+            // Would draw text: $"Essence: {_player.AetheriumEssence}"
+            
+            // Show active buffs
+            int buffY = 70;
+            
+            // Check for damage buff
+            if (_player.HasDamageBuff)
+            {
+                Rectangle buffIndicator = new Rectangle(20, buffY, 10, 10);
+                _spriteBatch.Draw(_debugTexture, buffIndicator, Color.Yellow); // Yellow for damage buff
+                
+                // Draw buff duration (would use DrawString in full implementation)
+                // $"Damage Buff: {_player.GetBuffDuration(BuffType.Damage):F1}s"
+                
+                buffY += 20; // Space for next buff
+            }
+            
+            // Check for speed buff
+            if (_player.HasSpeedBuff)
+            {
+                Rectangle buffIndicator = new Rectangle(20, buffY, 10, 10);
+                _spriteBatch.Draw(_debugTexture, buffIndicator, Color.LightGreen); // Green for speed buff
+                
+                // Draw buff duration (would use DrawString in full implementation)
+                // $"Speed Buff: {_player.GetBuffDuration(BuffType.Speed):F1}s"
+            }
         }
         
         /// <summary>

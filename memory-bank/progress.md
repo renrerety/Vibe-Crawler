@@ -456,9 +456,57 @@ Successfully implemented a Binary Space Partitioning (BSP) algorithm for procedu
 - Added the 'R' key for runtime dungeon regeneration testing
 
 **Next Steps:**
-- Proceed to Phase 6.3: [Next implementation phase]
+- Proceed to Phase 6.3: Aetherium Weaving Expansion
   - [Future tasks to be added]
 
 **Documentation:**
 - Updated architecture.md with procedural generation system details
 - Documented the BSP algorithm implementation and corridor connection approach
+
+#### Phase 6.3: Aetherium Weaving Expansion (COMPLETED)
+
+**Summary:**
+Successfully enhanced the Aetherium Weaving system with timed buffs, multiple buff types, and a selection interface. The system now features a more robust buff management system and visual indicators for active buffs.
+
+**Achievements:**
+1. **Buff Duration System**
+   - Implemented duration timers for all buff types
+   - Added automatic expiration of buffs after a set time period
+   - Created update logic to decrement timers in real-time
+   - Added visual indicators that reflect remaining buff time
+
+2. **Speed Buff Implementation**
+   - Added a new speed buff type that increases player movement speed
+   - Implemented visual effects to indicate active speed buff
+   - Created specialized activation method for the new buff type
+   - Ensured proper interaction with existing movement systems
+
+3. **Buff Selection Interface**
+   - Implemented number key selection for different buff types (1 for damage, 2 for speed)
+   - Added selection prompts when interacting with altars
+   - Created independent cost handling for each buff type
+   - Ensured proper resource management when activating buffs
+
+4. **Independent Buff Management**
+   - Implemented system for tracking multiple active buffs simultaneously
+   - Created unique visual effects for different buff combinations
+   - Added independent duration tracking for each buff type
+   - Ensured each buff expires independently based on its own timer
+
+**Technical Details:**
+- Used timer-based system for buff durations with frame-independent tracking
+- Implemented an enum-based buff type system for scalability
+- Added method to retrieve remaining durations for UI display
+- Created color-coded visual indicators for different buff states
+- Implemented simple UI elements to display health, essence, and active buffs
+
+**Next Steps:**
+- Proceed to Phase 6.4: Core UI Implementation (HUD)
+  - Implement SpriteFont for proper text rendering
+  - Create more robust UI layout
+  - Add minimap for dungeon navigation
+  - Implement proper menu screens
+
+**Documentation:**
+- Updated architecture.md with expanded Aetherium Weaving system details
+- Documented the buff management system and UI indicators
