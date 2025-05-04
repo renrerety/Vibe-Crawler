@@ -172,12 +172,12 @@ namespace AetheriumDepths.Entities
         {
             if (!IsActive || Sprite == null) return;
             
-            // Draw projectile with rotation and proper origin
+            // Draw the projectile with rotation
             spriteBatch.Draw(
                 Sprite,
                 Position,
                 null,
-                IsPlayerProjectile ? Color.Cyan : Color.OrangeRed,
+                IsPlayerProjectile ? Color.Cyan : Color.Red,
                 _rotation,
                 new Vector2(Sprite.Width / 2, Sprite.Height / 2),
                 1.0f,

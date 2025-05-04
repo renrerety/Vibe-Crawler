@@ -72,18 +72,20 @@ namespace AetheriumDepths.Gameplay.Interactables
         {
             if (IsDestroyed)
             {
+                Console.WriteLine("Crate is already destroyed!");
                 return false;
             }
             
+            // Take damage
             CurrentHealth -= damage;
-            Console.WriteLine($"Crate took {damage} damage! Health: {CurrentHealth}/{MaxHealth}");
+            Console.WriteLine($"Crate took {damage} damage! Health before: {CurrentHealth + damage}, after: {CurrentHealth}/{MaxHealth}");
             
             // Check if the crate has been destroyed
             if (CurrentHealth <= 0)
             {
                 CurrentHealth = 0;
                 IsDestroyed = true;
-                Console.WriteLine("Crate destroyed!");
+                Console.WriteLine("Crate is now destroyed!");
                 return true;
             }
             

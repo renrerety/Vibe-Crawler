@@ -1066,11 +1066,11 @@ namespace AetheriumDepths
             
             // Transfer player's projectiles to the game's projectile list
             List<Projectile> playerProjectiles = _player.GetActiveProjectiles();
-            foreach (var projectile in playerProjectiles)
+            for (int i = 0; i < playerProjectiles.Count; i++)
             {
-                if (!_projectiles.Contains(projectile))
+                if (!_projectiles.Contains(playerProjectiles[i]))
                 {
-                    _projectiles.Add(projectile);
+                    _projectiles.Add(playerProjectiles[i]);
                     Console.WriteLine("Added player projectile to game projectiles");
                 }
             }
@@ -1186,25 +1186,33 @@ namespace AetheriumDepths
                         if (!_crates[j].IsDestroyed)
                         {
                             // Calculate distance between projectile and crate center
-                            float distance = Vector2.Distance(
-                                projectile.Position,
-                                new Vector2(
-                                    _crates[j].Position.X + (_crates[j].Sprite?.Width ?? 0) / 2,
-                                    _crates[j].Position.Y + (_crates[j].Sprite?.Height ?? 0) / 2
-                                )
+                            Vector2 crateCenter = new Vector2(
+                                _crates[j].Position.X + (_crates[j].Sprite?.Width ?? 0) / 2,
+                                _crates[j].Position.Y + (_crates[j].Sprite?.Height ?? 0) / 2
                             );
                             
-                            // Use a generous collision radius (half the crate size)
-                            float collisionRadius = Math.Max((_crates[j].Sprite?.Width ?? 0), (_crates[j].Sprite?.Height ?? 0)) / 2f;
+                            float distance = Vector2.Distance(projectile.Position, crateCenter);
                             
-                            // Check if projectile is close enough to crate
-                            if (distance < collisionRadius)
+                            // Use full crate width as collision radius
+                            float collisionRadius = Math.Max((_crates[j].Sprite?.Width ?? 0), (_crates[j].Sprite?.Height ?? 0));
+                            
+                            // Check if projectile is close enough to crate or intersects with it
+                            if (distance < collisionRadius || projectile.Bounds.Intersects(_crates[j].Bounds))
                             {
-                                // Force destroy the crate
+                                // Force destroy the crate with maximum damage
                                 Console.WriteLine($"DIRECT HIT! Projectile at {projectile.Position} hit crate at {_crates[j].Position}, distance: {distance}");
-                                bool wasDestroyed = _crates[j].TakeDamage(100); // Ensure destruction
                                 
-                                if (wasDestroyed && _crates[j].ShouldDropLoot())
+                                // Apply massive damage to ensure destruction
+                                bool wasDestroyed = _crates[j].TakeDamage(1000);
+                                
+                                // Double-check if crate is now marked as destroyed
+                                if (!_crates[j].IsDestroyed)
+                                {
+                                    _crates[j].TakeDamage(1000); // Try again with even more damage
+                                    Console.WriteLine("Applied additional damage to ensure destruction");
+                                }
+                                
+                                if (_crates[j].IsDestroyed && _crates[j].ShouldDropLoot())
                                 {
                                     // Spawn loot
                                     _lootItems.Add(new LootItem(
@@ -1216,7 +1224,7 @@ namespace AetheriumDepths
                                     _popupTimer = POPUP_DURATION;
                                 }
                                 
-                                // Update obstacle list
+                                // Update obstacle list to remove the destroyed crate
                                 UpdateCrateObstacles();
                                 
                                 // Deactivate projectile

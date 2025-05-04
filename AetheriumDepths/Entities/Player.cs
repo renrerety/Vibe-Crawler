@@ -580,7 +580,7 @@ namespace AetheriumDepths.Entities
                 projectileStart,
                 LastMovementDirection,
                 _projectileTexture,
-                50, // Massive damage increase to ensure one-hit destruction
+                1000, // Ultra high damage to ensure one-hit destruction
                 350f, // Projectile speed
                 true); // Mark as player projectile
                 
