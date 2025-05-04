@@ -123,24 +123,52 @@ The game state flow has been expanded to include:
 The dungeon generation system creates and manages the game's level structure:
 
 - **Room Class**: Stores room bounds and provides utility methods like finding the center
-- **Dungeon Class**: Contains a collection of rooms and identifies the starting room
-- **DungeonGenerator**: Creates a predefined layout of rooms (currently hardcoded, but designed for future procedural expansion)
-- **Rendering**: Rooms are rendered as outlines during gameplay
+- **Dungeon Class**: Contains a collection of rooms and corridors and identifies the starting room
+- **BSPNode Class**: Represents nodes in the Binary Space Partitioning tree used for procedural generation
+- **DungeonGenerator**: Creates procedurally generated dungeons using a BSP algorithm
+- **Rendering**: Rooms and corridors are rendered during gameplay
 - **Player Spawning**: Player spawns in the center of the first room
 - **Enemy Placement**: Enemies are positioned in rooms for encounters
 - **Altar Placement**: Weaving altar is positioned in a separate room
 
-#### Dungeon Generation Approach
+#### BSP-based Procedural Generation
 
-The current implementation uses a simplified placeholder approach:
-1. The `DungeonGenerator` creates a `Dungeon` with 4 hardcoded rooms
-2. Each `Room` is defined by a `Rectangle` specifying its position and size
-3. Rooms are validated to ensure they fit within the viewport
-4. The player is positioned in the center of the first room
-5. The enemy is positioned in the center of the last room
-6. The weaving altar is positioned in a middle room
+The game now uses a Binary Space Partitioning (BSP) approach for procedural dungeon generation:
 
-The placeholder system is designed to be replaced with proper procedural generation in future iterations, maintaining the same interface so game code won't need major changes.
+1. **BSP Tree Creation**:
+   - Start with a single rectangular space representing the entire dungeon area
+   - Recursively split this space either horizontally or vertically
+   - Split direction is determined by area aspect ratio or random choice
+   - Stop splitting when minimum leaf size is reached or max depth is attained
+   - Each leaf node in the resulting tree represents a potential room location
+
+2. **Room Generation**:
+   - For each leaf node, create a room that fits within its boundaries
+   - Room size is determined by a percentage of the leaf size (with minimum constraints)
+   - Room position is randomly determined within the leaf boundaries
+   - This approach ensures rooms don't overlap while maintaining organic placement
+
+3. **Corridor Connection**:
+   - Corridors connect rooms based on the BSP tree structure
+   - Sibling nodes in the tree have their rooms connected
+   - Connections use an L-shaped corridor system (horizontal + vertical segments)
+   - Corridor width is configurable for gameplay balance
+
+4. **Entity Placement**:
+   - The player starts in the first room (index 0)
+   - Enemies are placed in rooms farthest from the player's starting position
+   - The weaving altar is placed in a centrally-located room
+   - This ensures a progression in the game's exploration path
+
+#### Visualization and Debugging
+
+The system includes debugging visualization features:
+- Leaf node boundaries are rendered in green
+- Room boundaries are rendered in white with semi-transparent fills
+- Corridors are rendered in gray
+- The regeneration key (R) allows runtime testing of different dungeon layouts
+
+This procedural approach replaced the initial placeholder system that used hardcoded room positions, offering greater variety and expandability.
 
 ### 3.9 Aetherium Weaving System
 

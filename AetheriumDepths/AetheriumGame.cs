@@ -129,8 +129,8 @@ namespace AetheriumDepths
         /// </summary>
         private void GenerateDungeon()
         {
-            // Generate a new dungeon
-            _currentDungeon = _dungeonGenerator.GenerateSimpleDungeon(GraphicsDevice.Viewport.Bounds);
+            // Generate a new dungeon using BSP
+            _currentDungeon = _dungeonGenerator.GenerateBSPDungeon(GraphicsDevice.Viewport.Bounds);
             
             // Position player in the center of the starting room
             if (_currentDungeon?.StartingRoom != null)
@@ -166,7 +166,7 @@ namespace AetheriumDepths
             if (_currentDungeon?.Rooms.Count > 1)
             {
                 // Get a room from the middle of the array (not first, not last)
-                int altarRoomIndex = _currentDungeon.Rooms.Count <= 2 ? 0 : 1;
+                int altarRoomIndex = _currentDungeon.Rooms.Count <= 2 ? 0 : _currentDungeon.Rooms.Count / 2;
                 Room altarRoom = _currentDungeon.Rooms[altarRoomIndex];
                 Vector2 altarPosition = altarRoom.Center;
                 
@@ -489,11 +489,35 @@ namespace AetheriumDepths
         {
             if (_currentDungeon == null) return;
             
+            // Draw corridors
+            foreach (Rectangle corridor in _currentDungeon.Corridors)
+            {
+                _spriteBatch.Draw(_debugTexture, corridor, new Color(100, 100, 100, 150));
+            }
+            
             // Draw each room
             foreach (Room room in _currentDungeon.Rooms)
             {
                 // Draw room outline with a thickness of 2 pixels
                 DrawRectangleOutline(room.Bounds, Color.White, 2);
+                
+                // Fill the room with a slight color
+                Rectangle innerRect = new Rectangle(
+                    room.Bounds.X + 2, 
+                    room.Bounds.Y + 2, 
+                    room.Bounds.Width - 4, 
+                    room.Bounds.Height - 4);
+                _spriteBatch.Draw(_debugTexture, innerRect, new Color(50, 50, 70, 50));
+            }
+            
+            // Debug visualization: Draw BSP tree partitions if available
+            if (_currentDungeon.LeafNodes != null)
+            {
+                foreach (BSPNode leaf in _currentDungeon.LeafNodes)
+                {
+                    // Draw leaf node boundaries with a different color
+                    DrawRectangleOutline(leaf.Area, new Color(50, 200, 50, 100), 1);
+                }
             }
         }
         
