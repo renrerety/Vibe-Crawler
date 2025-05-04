@@ -10,11 +10,11 @@ namespace AetheriumDepths.Generation
     public class DungeonGenerator
     {
         // BSP generation constants
-        private const int MIN_LEAF_SIZE = 100; // Minimum size of a leaf node
-        private const int MIN_ROOM_SIZE = 50;  // Minimum size of a room
-        private const float ROOM_SIZE_FACTOR = 0.7f; // How much of a leaf can be used for a room
-        private const int CORRIDOR_WIDTH = 40; // Width of corridors between rooms
-        private const int MAX_ITERATIONS = 8;  // Maximum number of recursive splits
+        private const int MIN_LEAF_SIZE = 800; // Increased to support much larger rooms
+        private const int MIN_ROOM_SIZE = 720;  // Quadrupled from 180
+        private const float ROOM_SIZE_FACTOR = 0.85f; // Maintained for consistency
+        private const int CORRIDOR_WIDTH = 100; // Widened corridors to match larger rooms
+        private const int MAX_ITERATIONS = 10;  // Increased to generate more rooms (10-15)
         
         // Random number generator
         private Random _random;
@@ -36,13 +36,18 @@ namespace AetheriumDepths.Generation
         {
             Dungeon dungeon = new Dungeon();
             
-            // Calculate dungeon area with margins to ensure rooms aren't on the screen edges
-            int margin = 40;
+            // Calculate dungeon area with increased margins for larger rooms
+            int margin = 80; // Increased from 40
+            
+            // Create a dungeon area larger than the viewport to support more rooms
+            int dungeonWidth = viewportBounds.Width * 3; // Triple width
+            int dungeonHeight = viewportBounds.Height * 3; // Triple height
+            
             Rectangle dungeonArea = new Rectangle(
-                margin, 
-                margin, 
-                viewportBounds.Width - margin * 2, 
-                viewportBounds.Height - margin * 2);
+                -dungeonWidth/2 + viewportBounds.Width/2, // Center the dungeon
+                -dungeonHeight/2 + viewportBounds.Height/2, // Center the dungeon
+                dungeonWidth, 
+                dungeonHeight);
             
             // Create the root node of the BSP tree
             BSPNode rootNode = new BSPNode(dungeonArea);
@@ -69,17 +74,19 @@ namespace AetheriumDepths.Generation
             // Create corridors between rooms
             CreateCorridors(dungeon);
             
-            // Validate that rooms are within viewport bounds
-            for (int i = 0; i < dungeon.Rooms.Count; i++)
+            // For consistency, make sure the first room in the list is the most suitable starting room
+            // (e.g., it could be the largest room or one closest to the center)
+            if (dungeon.Rooms.Count > 0)
             {
-                Rectangle roomBounds = dungeon.Rooms[i].Bounds;
+                // Find a room near the center to make it the starting room
+                Room centerRoom = FindRoomNearestToCenter(dungeon.Rooms, dungeonArea.Center);
                 
-                // Ensure room is within viewport (with a small margin)
-                roomBounds.X = Math.Max(margin, Math.Min(viewportBounds.Width - roomBounds.Width - margin, roomBounds.X));
-                roomBounds.Y = Math.Max(margin, Math.Min(viewportBounds.Height - roomBounds.Height - margin, roomBounds.Y));
-                
-                // Update room with adjusted bounds if needed
-                dungeon.Rooms[i] = new Room(roomBounds);
+                // Move the center room to the beginning of the list
+                if (centerRoom != null && dungeon.Rooms.Contains(centerRoom) && dungeon.Rooms[0] != centerRoom)
+                {
+                    dungeon.Rooms.Remove(centerRoom);
+                    dungeon.Rooms.Insert(0, centerRoom);
+                }
             }
             
             return dungeon;
@@ -329,6 +336,37 @@ namespace AetheriumDepths.Generation
             }
             
             return dungeon;
+        }
+
+        /// <summary>
+        /// Finds the room nearest to the center of the dungeon.
+        /// </summary>
+        /// <param name="rooms">The list of rooms to search.</param>
+        /// <param name="center">The center point of the dungeon.</param>
+        /// <returns>The room nearest to the center.</returns>
+        private Room FindRoomNearestToCenter(List<Room> rooms, Point center)
+        {
+            if (rooms.Count == 0) return null;
+            
+            Room nearestRoom = rooms[0];
+            float nearestDistance = Vector2.Distance(
+                new Vector2(center.X, center.Y),
+                new Vector2(nearestRoom.Center.X, nearestRoom.Center.Y));
+            
+            foreach (Room room in rooms)
+            {
+                float distance = Vector2.Distance(
+                    new Vector2(center.X, center.Y),
+                    new Vector2(room.Center.X, room.Center.Y));
+                
+                if (distance < nearestDistance)
+                {
+                    nearestDistance = distance;
+                    nearestRoom = room;
+                }
+            }
+            
+            return nearestRoom;
         }
     }
 } 

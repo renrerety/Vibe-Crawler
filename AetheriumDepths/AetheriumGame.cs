@@ -70,8 +70,8 @@ namespace AetheriumDepths
             Content.RootDirectory = "Content";
             
             // Set window properties to ensure visibility
-            _graphics.PreferredBackBufferWidth = 800;
-            _graphics.PreferredBackBufferHeight = 480;
+            _graphics.PreferredBackBufferWidth = 1920;
+            _graphics.PreferredBackBufferHeight = 1080;
             _graphics.IsFullScreen = false;
             _graphics.ApplyChanges();
             

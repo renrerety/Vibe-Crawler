@@ -133,32 +133,47 @@ The dungeon generation system creates and manages the game's level structure:
 
 #### BSP-based Procedural Generation
 
-The game now uses a Binary Space Partitioning (BSP) approach for procedural dungeon generation:
+The game uses a Binary Space Partitioning (BSP) approach for procedural dungeon generation, which has been significantly enhanced to create massive dungeons with numerous large rooms:
 
-1. **BSP Tree Creation**:
-   - Start with a single rectangular space representing the entire dungeon area
-   - Recursively split this space either horizontally or vertically
-   - Split direction is determined by area aspect ratio or random choice
-   - Stop splitting when minimum leaf size is reached or max depth is attained
-   - Each leaf node in the resulting tree represents a potential room location
+1. **Expanded Dungeon Area**:
+   - Creates a dungeon area 3x larger than the viewport in both dimensions
+   - Centers the dungeon around the viewport for balanced exploration
+   - Uses expanded margins (80px) to prevent generation issues at boundaries
+   - Supports a full HD game window (1920x1080) for better visualization
 
-2. **Room Generation**:
-   - For each leaf node, create a room that fits within its boundaries
-   - Room size is determined by a percentage of the leaf size (with minimum constraints)
-   - Room position is randomly determined within the leaf boundaries
-   - This approach ensures rooms don't overlap while maintaining organic placement
+2. **Massive BSP Tree Creation**:
+   - Starts with a single massive rectangular space representing the entire dungeon area
+   - Recursively splits this space over 10 iterations to create 10-15 room spaces
+   - Uses intelligent split direction determination based on area aspect ratio
+   - Sets minimum leaf size to 800 pixels to support extremely large rooms
+   - Creates a rich tree structure optimized for substantial room layouts
 
-3. **Corridor Connection**:
-   - Corridors connect rooms based on the BSP tree structure
-   - Sibling nodes in the tree have their rooms connected
-   - Connections use an L-shaped corridor system (horizontal + vertical segments)
-   - Corridor width is configurable for gameplay balance
+3. **Quadruple-Sized Room Generation**:
+   - Each leaf node produces a room with minimum dimensions of 720 pixels
+   - Rooms occupy up to 85% of their containing leaf node's space
+   - Generated rooms are 4x larger than the original implementation
+   - Provides arena-like spaces for complex combat encounters
+   - Ensures sufficient space for future additions like room-specific features and obstacles
 
-4. **Entity Placement**:
-   - The player starts in the first room (index 0)
-   - Enemies are placed in rooms farthest from the player's starting position
-   - The weaving altar is placed in a centrally-located room
-   - This ensures a progression in the game's exploration path
+4. **Enhanced Corridor System**:
+   - Connects rooms with extra-wide 100-pixel corridors for comfortable navigation
+   - Maintains L-shaped corridor design for clear pathfinding
+   - Scales corridor width proportionally to match the increased room sizes
+   - Optimizes corridor placement based on the BSP tree structure
+
+5. **Smart Starting Room Selection**:
+   - Implements center-finding algorithm to identify optimal starting room
+   - Selects the room closest to the dungeon center as the starting point
+   - Reorders the room list to ensure the starting room is always first
+   - Creates more intuitive dungeon progression from center outward
+
+6. **Rendering Optimizations**:
+   - Camera system dynamically follows the player through the expanded dungeon
+   - Minimap system provides navigation awareness across the massive layout
+   - Rendering layers properly handle the significantly larger world space
+   - Visual indicators are scaled appropriately for the increased dimensions
+
+This enhanced procedural generation system creates truly expansive dungeons with massive rooms suitable for complex gameplay scenarios, multiple enemies, and varied environmental features. The quadrupling of room dimensions transforms the game experience from confined corridors to epic halls and chambers while maintaining the algorithmic benefits of BSP-based generation.
 
 #### Visualization and Debugging
 
@@ -523,7 +538,7 @@ To ensure entities remain within the dungeon's bounds, a comprehensive collision
 The dungeon geometry defines the walkable areas through:
 
 1. **Room Bounds**: Rectangle areas representing each room
-2. **Corridor Bounds**: Rectangle segments connecting rooms
+2. **Corridor Bounds**: Rectangle segments connecting rooms (width increased to 40 pixels for comfortable traversal)
 3. **Combined Walkable Areas**: A collection of all walkable rectangles in the dungeon
 
 #### 9.2.2 Movement Validation
@@ -532,9 +547,13 @@ The `Dungeon` class provides validation methods to enforce boundaries:
 
 1. **`GetAllWalkableBounds()`**: Returns a list of all walkable rectangles
 2. **`IsPositionValid(Vector2 position)`**: Checks if a single point is within any walkable area
-3. **`IsMovementValid(Rectangle bounds)`**: Validates if an entity's bounds are fully contained within a walkable area
+3. **`IsMovementValid(Rectangle bounds)`**: Validates if an entity's bounds are fully contained within walkable areas
 
-The validation approach ensures all four corners of an entity's bounding box remain within walkable areas, preventing entities from clipping through walls or entering invalid spaces.
+The validation approach has been enhanced to handle junction areas more intelligently:
+- Each corner of an entity's bounds is checked individually against all walkable areas
+- Movement is valid if all corners are within valid areas, even if those areas are different
+- This prevents entities from getting stuck at corridor-room junctions
+- Early return optimization when all corners are validated improves performance
 
 #### 9.2.3 Movement Implementation
 
@@ -542,10 +561,18 @@ Entity movement now follows this process:
 
 1. Calculate a proposed new position based on input or AI
 2. Generate a bounding rectangle at the proposed position
-3. Validate the proposed bounds against walkable areas
+3. Validate the proposed bounds against walkable areas using the enhanced algorithm
 4. If valid, update the position; if invalid, attempt to slide along walls by testing X and Y movement separately
 
 This approach creates a more natural feeling movement system, where entities smoothly slide along walls rather than stopping abruptly when hitting boundaries at an angle.
+
+#### 9.2.4 Visual Representation
+
+The visual representation of boundaries has been designed to enhance gameplay:
+- Room outlines are rendered with thin (1px) semi-transparent lines
+- These boundaries serve as visual indicators without impeding movement
+- Corridors use a distinct color to visually differentiate from rooms
+- Debug visualization shows BSP partitioning with minimal visual interference
 
 ### 9.3 System Integration
 
