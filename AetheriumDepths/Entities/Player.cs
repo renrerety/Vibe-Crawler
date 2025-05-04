@@ -1,5 +1,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 
 namespace AetheriumDepths.Entities
 {
@@ -32,6 +33,17 @@ namespace AetheriumDepths.Entities
             (int)Position.Y, 
             Sprite?.Width ?? 0, 
             Sprite?.Height ?? 0);
+
+        /// <summary>
+        /// Amount of Aetherium Essence the player has collected.
+        /// Used for weaving abilities at altars.
+        /// </summary>
+        public int AetheriumEssence { get; private set; } = 0;
+
+        /// <summary>
+        /// Flag indicating if the player has an active damage buff from weaving.
+        /// </summary>
+        public bool HasDamageBuff { get; private set; } = false;
 
         /// <summary>
         /// Flag indicating if an attack is currently active.
@@ -206,13 +218,59 @@ namespace AetheriumDepths.Entities
         }
 
         /// <summary>
+        /// Adds Aetherium Essence to the player's collection.
+        /// </summary>
+        /// <param name="amount">Amount of essence to add.</param>
+        public void AddAetheriumEssence(int amount)
+        {
+            AetheriumEssence += amount;
+            Console.WriteLine($"Player now has {AetheriumEssence} Aetherium Essence");
+        }
+
+        /// <summary>
+        /// Activates the damage buff when interacting with a weaving altar.
+        /// </summary>
+        /// <param name="essenceCost">Amount of essence required to activate the buff.</param>
+        /// <returns>True if the buff was activated; false if not enough essence.</returns>
+        public bool ActivateDamageBuff(int essenceCost)
+        {
+            if (AetheriumEssence >= essenceCost)
+            {
+                AetheriumEssence -= essenceCost;
+                HasDamageBuff = true;
+                Console.WriteLine($"Damage buff activated! Player now has {AetheriumEssence} Aetherium Essence");
+                return true;
+            }
+            
+            Console.WriteLine($"Not enough essence to activate buff. Have {AetheriumEssence}, need {essenceCost}");
+            return false;
+        }
+
+        /// <summary>
         /// Draws the player to the screen.
         /// </summary>
         /// <param name="spriteBatch">The sprite batch to use for drawing.</param>
         public void Draw(SpriteBatch spriteBatch)
         {
-            // Draw the player with a semi-transparent effect when invincible
-            Color playerColor = IsInvincible ? new Color(255, 255, 255, 150) : Color.White;
+            // Apply appropriate color based on player state
+            Color playerColor;
+            
+            if (IsInvincible)
+            {
+                // Semi-transparent when invincible (dodge)
+                playerColor = new Color(255, 255, 255, 150);
+            }
+            else if (HasDamageBuff)
+            {
+                // Yellow tint when damage buff is active
+                playerColor = Color.Yellow;
+            }
+            else
+            {
+                // Normal color
+                playerColor = Color.White;
+            }
+            
             spriteBatch.Draw(Sprite, Position, playerColor);
         }
 

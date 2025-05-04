@@ -29,6 +29,9 @@ namespace AetheriumDepths
         // Enemy entities
         private List<Enemy> _enemies;
         
+        // Weaving Altar
+        private WeavingAltar _weavingAltar;
+        
         // Debug texture for attack hitbox
         private Texture2D _debugTexture;
         
@@ -40,6 +43,12 @@ namespace AetheriumDepths
         private const float PlayerSpeed = 200f; // Pixels per second
         private const int EnemyHealth = 3; // Default enemy health
         private const int AttackDamage = 1; // Default attack damage
+        private const int DamageBuffMultiplier = 2; // Damage multiplier when buff is active
+        private const int AetheriumEssenceReward = 1; // Essence gained per enemy defeated
+        private const int AetheriumWeavingCost = 3; // Essence cost for activating a buff
+        
+        // Interaction constants
+        private const float InteractionDistance = 50f; // Distance for interacting with objects
 
         public AetheriumGame()
         {
@@ -96,6 +105,12 @@ namespace AetheriumDepths
                 GraphicsDevice.Viewport.Height * 0.5f);
             _enemies.Add(new Enemy(enemyPosition, enemySprite, EnemyHealth));
             
+            // Load dedicated altar sprite
+            Texture2D altarSprite = Content.Load<Texture2D>("AltarSprite");
+            
+            // Create weaving altar (position will be set in GenerateDungeon)
+            _weavingAltar = new WeavingAltar(Vector2.Zero, altarSprite);
+            
             // Create debug texture for attack hitbox and room drawing
             _debugTexture = new Texture2D(GraphicsDevice, 1, 1);
             _debugTexture.SetData(new[] { Color.White });
@@ -141,6 +156,23 @@ namespace AetheriumDepths
                 
                 Console.WriteLine($"Positioned enemy at {enemyPosition} in last room");
             }
+            
+            // Position weaving altar in a random middle room
+            if (_currentDungeon?.Rooms.Count > 1)
+            {
+                // Get a room from the middle of the array (not first, not last)
+                int altarRoomIndex = _currentDungeon.Rooms.Count <= 2 ? 0 : 1;
+                Room altarRoom = _currentDungeon.Rooms[altarRoomIndex];
+                Vector2 altarPosition = altarRoom.Center;
+                
+                // Adjust for altar sprite center
+                altarPosition.X -= (_weavingAltar.Sprite?.Width ?? 0) / 2;
+                altarPosition.Y -= (_weavingAltar.Sprite?.Height ?? 0) / 2;
+                
+                _weavingAltar.Position = altarPosition;
+                
+                Console.WriteLine($"Positioned weaving altar at {altarPosition} in room {altarRoomIndex}");
+            }
         }
 
         protected override void Update(GameTime gameTime)
@@ -156,9 +188,9 @@ namespace AetheriumDepths
             }
 
             // Check for debug state changes
-            if (_inputManager.IsActionJustPressed(InputManager.GameAction.Interact))
+            if (Keyboard.GetState().IsKeyDown(Keys.P))
             {
-                // Toggle between Gameplay and Paused states (using E key for now)
+                // Toggle between Gameplay and Paused states
                 if (_stateManager.CurrentState == StateManager.GameState.Gameplay)
                     _stateManager.ChangeState(StateManager.GameState.Paused);
                 else if (_stateManager.CurrentState == StateManager.GameState.Paused)
@@ -222,6 +254,11 @@ namespace AetheriumDepths
             base.Draw(gameTime);
         }
 
+        /// <summary>
+        /// Event handler for state change events.
+        /// </summary>
+        /// <param name="sender">The object that raised the event.</param>
+        /// <param name="e">The event arguments containing the new state.</param>
         private void OnStateChanged(object sender, StateManager.GameState newState)
         {
             Console.WriteLine($"Game state changed to: {newState}");
@@ -274,6 +311,18 @@ namespace AetheriumDepths
                 Console.WriteLine("Player dodged!");
             }
             
+            // Check for interact input
+            if (_inputManager.IsActionJustPressed(InputManager.GameAction.Interact))
+            {
+                // Check if player is near the weaving altar
+                if (CollisionUtility.CheckAABBCollision(_player.Bounds, _weavingAltar.Bounds))
+                {
+                    // Try to activate damage buff by spending essence
+                    _player.ActivateDamageBuff(AetheriumWeavingCost);
+                    Console.WriteLine("Player interacted with weaving altar!");
+                }
+            }
+            
             // Check for attack collision with enemies
             if (_player.IsAttacking)
             {
@@ -281,9 +330,19 @@ namespace AetheriumDepths
                 {
                     if (enemy.IsActive && CollisionUtility.CheckAABBCollision(_player.AttackHitbox, enemy.Bounds))
                     {
+                        // Calculate damage based on buff status
+                        int damage = _player.HasDamageBuff ? AttackDamage * DamageBuffMultiplier : AttackDamage;
+                        
                         // Deal damage to the enemy
-                        enemy.TakeDamage(AttackDamage);
+                        enemy.TakeDamage(damage);
                         Console.WriteLine($"Hit enemy! Enemy health: {enemy.Health}");
+                        
+                        // Check if enemy died
+                        if (enemy.Health <= 0)
+                        {
+                            // Grant Aetherium essence on enemy death
+                            _player.AddAetheriumEssence(AetheriumEssenceReward);
+                        }
                         
                         // Deactivate the current attack (prevent multiple hits from one swing)
                         _player.DeactivateAttack();
@@ -313,6 +372,9 @@ namespace AetheriumDepths
             // Draw the dungeon rooms
             DrawDungeon();
             
+            // Draw the weaving altar
+            _weavingAltar.Draw(_spriteBatch);
+            
             // Draw enemies
             foreach (Enemy enemy in _enemies)
             {
@@ -324,6 +386,9 @@ namespace AetheriumDepths
             
             // Draw attack hitbox if attacking (for debugging)
             _player.DrawAttackHitbox(_spriteBatch, _debugTexture);
+            
+            // Draw UI elements (essence counter, buff indicators)
+            DrawGameplayUI();
             
             Console.WriteLine($"Drawing Gameplay state: {gameTime.TotalGameTime}");
         }
@@ -344,6 +409,16 @@ namespace AetheriumDepths
         }
         
         /// <summary>
+        /// Draws gameplay UI elements like the essence counter.
+        /// </summary>
+        private void DrawGameplayUI()
+        {
+            // This is a placeholder for future UI implementation
+            // In a real game, you would draw text showing the essence count, buff icons, etc.
+            // For now, we'll leave this empty as UI is not part of the current task
+        }
+        
+        /// <summary>
         /// Draws a rectangle outline with the specified color and thickness.
         /// </summary>
         /// <param name="rectangle">The rectangle to draw.</param>
@@ -351,16 +426,13 @@ namespace AetheriumDepths
         /// <param name="thickness">The thickness of the outline in pixels.</param>
         private void DrawRectangleOutline(Rectangle rectangle, Color color, int thickness)
         {
-            // Draw top line
+            // Top
             _spriteBatch.Draw(_debugTexture, new Rectangle(rectangle.X, rectangle.Y, rectangle.Width, thickness), color);
-            
-            // Draw bottom line
+            // Bottom
             _spriteBatch.Draw(_debugTexture, new Rectangle(rectangle.X, rectangle.Y + rectangle.Height - thickness, rectangle.Width, thickness), color);
-            
-            // Draw left line
+            // Left
             _spriteBatch.Draw(_debugTexture, new Rectangle(rectangle.X, rectangle.Y, thickness, rectangle.Height), color);
-            
-            // Draw right line
+            // Right
             _spriteBatch.Draw(_debugTexture, new Rectangle(rectangle.X + rectangle.Width - thickness, rectangle.Y, thickness, rectangle.Height), color);
         }
 

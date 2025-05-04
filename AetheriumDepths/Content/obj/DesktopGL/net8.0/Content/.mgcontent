@@ -6,8 +6,10 @@
   <SourceFiles>
     <File>E:/Vibe-Crawler/AetheriumDepths/Content/PlayerSprite.png</File>
     <File>E:/Vibe-Crawler/AetheriumDepths/Content/EnemySprite.png</File>
+    <File>E:/Vibe-Crawler/AetheriumDepths/Content/AltarSprite.png</File>
   </SourceFiles>
   <DestFiles>
+    <File xsi:nil="true" />
     <File xsi:nil="true" />
     <File xsi:nil="true" />
   </DestFiles>

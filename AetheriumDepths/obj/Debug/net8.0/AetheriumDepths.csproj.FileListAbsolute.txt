@@ -32,3 +32,4 @@ E:\Vibe-Crawler\AetheriumDepths\obj\Debug\net8.0\ref\AetheriumDepths.dll
 E:\Vibe-Crawler\AetheriumDepths\obj\Debug\net8.0\AetheriumDepths.sourcelink.json
 E:\Vibe-Crawler\AetheriumDepths\bin\Debug\net8.0\Content\PlayerSprite.xnb
 E:\Vibe-Crawler\AetheriumDepths\bin\Debug\net8.0\Content\EnemySprite.xnb
+E:\Vibe-Crawler\AetheriumDepths\bin\Debug\net8.0\Content\AltarSprite.xnb
