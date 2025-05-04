@@ -26,6 +26,9 @@ namespace AetheriumDepths
         // Input management
         private InputManager _inputManager;
         
+        // Random number generator
+        private Random _random = new Random();
+        
         // Player entity
         private Player _player;
         
@@ -98,6 +101,7 @@ namespace AetheriumDepths
         // UI state
         private bool _isNearAltar = false;
         private bool _isNearChest = false;
+        private bool _nearAnyDoor = false;
         private TreasureChest _nearbyChest = null;
         
         // Popup notification
@@ -428,6 +432,9 @@ namespace AetheriumDepths
             _debugTexture = new Texture2D(GraphicsDevice, 1, 1);
             _debugTexture.SetData(new[] { Color.White });
             
+            // Set debug texture for entity classes
+            Enemy.SetDebugTexture(_debugTexture);
+            
             // Load font for UI
             try
             {
@@ -477,9 +484,39 @@ namespace AetheriumDepths
             _currentDungeon = _dungeonGenerator.GenerateBSPDungeon(GraphicsDevice.Viewport.Bounds);
             
             // Position player in the center of the starting room
-            if (_currentDungeon?.StartingRoom != null)
+            Room startRoom = null;
+            Room bossRoom = null;
+            Room treasureRoom = null;
+            Room altarRoom = null;
+            List<Room> normalRooms = new List<Room>();
+            
+            // Categorize all rooms by type
+            foreach (Room room in _currentDungeon.Rooms)
             {
-                Vector2 startPosition = _currentDungeon.StartingRoom.Center;
+                switch (room.Type)
+                {
+                    case RoomType.Start:
+                        startRoom = room;
+                        break;
+                    case RoomType.Boss:
+                        bossRoom = room;
+                        break;
+                    case RoomType.Treasure:
+                        treasureRoom = room;
+                        break;
+                    case RoomType.Altar:
+                        altarRoom = room;
+                        break;
+                    case RoomType.Normal:
+                        normalRooms.Add(room);
+                        break;
+                }
+            }
+            
+            // Position player in the starting room
+            if (startRoom != null)
+            {
+                Vector2 startPosition = startRoom.Center;
                 
                 // Adjust for player sprite center
                 startPosition.X -= (_player.Sprite?.Width ?? 0) / 2;
@@ -490,151 +527,264 @@ namespace AetheriumDepths
                 Console.WriteLine($"Positioned player at {startPosition} in starting room");
             }
             
-            // Spawn enemies in rooms (except the starting room)
-            if (_currentDungeon?.Rooms.Count > 1)
+            // ROOM TYPE 1: SET UP BOSS ROOM
+            if (bossRoom != null)
             {
-                // Get all rooms except the starting room
-                var availableRooms = new List<Room>(_currentDungeon.Rooms);
-                if (_currentDungeon.StartingRoom != null)
+                SetupBossRoom(bossRoom);
+            }
+            
+            // ROOM TYPE 2: SET UP TREASURE ROOM
+            if (treasureRoom != null)
+            {
+                SetupTreasureRoom(treasureRoom);
+                
+                // Place a door at the entrance to the treasure room
+                // This ensures the treasure room is always locked behind a door
+                PlaceDoorToRoom(treasureRoom);
+                Console.WriteLine("Treasure room secured with a locked door!");
+            }
+            
+            // ROOM TYPE 3: SET UP ALTAR ROOM
+            if (altarRoom != null)
+            {
+                SetupAltarRoom(altarRoom);
+            }
+            
+            // ROOM TYPE 4: SET UP NORMAL ROOMS
+            foreach (Room normalRoom in normalRooms)
+            {
+                SetupNormalRoom(normalRoom);
+            }
+        }
+        
+        /// <summary>
+        /// Sets up a boss room with a single boss enemy.
+        /// </summary>
+        /// <param name="room">The boss room to set up.</param>
+        private void SetupBossRoom(Room room)
+        {
+            Console.WriteLine("Setting up boss room...");
+            
+            // Center position in room
+            Vector2 bossPosition = room.Center;
+            
+            // Create boss texture (or use placeholder)
+            Texture2D bossTexture = null;
+            try
+            {
+                bossTexture = Content.Load<Texture2D>("BossSprite");
+            }
+            catch
+            {
+                // Create placeholder if texture doesn't exist
+                bossTexture = new Texture2D(GraphicsDevice, 64, 64);
+                Color[] colorData = new Color[64 * 64];
+                for (int i = 0; i < colorData.Length; i++)
                 {
-                    availableRooms.Remove(_currentDungeon.StartingRoom);
+                    colorData[i] = Color.DarkRed;
+                }
+                bossTexture.SetData(colorData);
+            }
+            
+            // Create boss with high health
+            BossEnemy boss = new BossEnemy(bossPosition, bossTexture, 20); // 20 health (much higher than normal)
+            _enemies.Add(boss);
+            
+            Console.WriteLine($"Boss enemy placed at {bossPosition}");
+        }
+        
+        /// <summary>
+        /// Sets up a treasure room with chests and no enemies.
+        /// </summary>
+        /// <param name="room">The treasure room to set up.</param>
+        private void SetupTreasureRoom(Room room)
+        {
+            Console.WriteLine("Setting up treasure room...");
+            
+            // Retrieve chest textures
+            Texture2D chestClosedTexture = null;
+            Texture2D chestOpenTexture = null;
+            
+            try
+            {
+                chestClosedTexture = Content.Load<Texture2D>("ChestClosedSprite");
+                chestOpenTexture = Content.Load<Texture2D>("ChestOpenSprite");
+            }
+            catch
+            {
+                // Create placeholders if they don't exist yet
+                chestClosedTexture = new Texture2D(GraphicsDevice, 32, 32);
+                Color[] closedColorData = new Color[1024];
+                for (int i = 0; i < 1024; i++) closedColorData[i] = Color.Goldenrod;
+                chestClosedTexture.SetData(closedColorData);
+                
+                chestOpenTexture = new Texture2D(GraphicsDevice, 32, 32);
+                Color[] openColorData = new Color[1024];
+                for (int i = 0; i < 1024; i++)
+                {
+                    int x = i % 32;
+                    int y = i / 32;
+                    if (x >= 8 && x <= 24 && y >= 8 && y <= 24) openColorData[i] = Color.Black;
+                    else openColorData[i] = Color.Goldenrod;
+                }
+                chestOpenTexture.SetData(openColorData);
+            }
+            
+            // Place 1-3 chests in the room
+            int chestCount = new Random().Next(1, 4); // 1-3 chests
+            
+            for (int i = 0; i < chestCount; i++)
+            {
+                // Position chest with some randomization
+                Vector2 chestPosition = room.Center;
+                
+                // Offset from center (except for the first chest)
+                if (i > 0)
+                {
+                    int offsetX = new Random().Next(-100, 101);
+                    int offsetY = new Random().Next(-100, 101);
+                    chestPosition.X += offsetX;
+                    chestPosition.Y += offsetY;
                 }
                 
-                // Find the treasure room if it exists
-                Room treasureRoom = null;
-                foreach (var room in availableRooms)
+                // Adjust for sprite center
+                chestPosition.X -= (chestClosedTexture?.Width ?? 0) / 2;
+                chestPosition.Y -= (chestClosedTexture?.Height ?? 0) / 2;
+                
+                TreasureChest chest = new TreasureChest(chestPosition, chestClosedTexture, chestOpenTexture);
+                _treasureChests.Add(chest);
+                
+                Console.WriteLine($"Positioned treasure chest at {chestPosition}");
+            }
+            
+            // Add some decorative crates only (no enemies or traps)
+            SpawnDecorationCrates(room, 3, 5); // 3-5 decoration crates
+        }
+        
+        /// <summary>
+        /// Sets up an altar room with the weaving altar and no enemies or hazards.
+        /// </summary>
+        /// <param name="room">The altar room to set up.</param>
+        private void SetupAltarRoom(Room room)
+        {
+            Console.WriteLine("Setting up altar room...");
+            
+            // Position altar in the room center
+            Vector2 altarPosition = room.Center;
+            
+            // Adjust for altar sprite center
+            altarPosition.X -= (_weavingAltar.Sprite?.Width ?? 0) / 2;
+            altarPosition.Y -= (_weavingAltar.Sprite?.Height ?? 0) / 2;
+            
+            _weavingAltar.Position = altarPosition;
+            
+            Console.WriteLine($"Positioned altar at {altarPosition}");
+            
+            // Add some decorative crates only (no enemies or traps)
+            SpawnDecorationCrates(room, 2, 4); // 2-4 decoration crates
+        }
+        
+        /// <summary>
+        /// Sets up a normal room with enemies, traps, and crates.
+        /// </summary>
+        /// <param name="room">The normal room to set up.</param>
+        private void SetupNormalRoom(Room room)
+        {
+            Console.WriteLine("Setting up normal room...");
+            
+            // Decide how many enemies to spawn based on room size
+            int maxEnemies = Math.Max(1, room.Bounds.Width * room.Bounds.Height / 300000); // 1-3 enemies based on room size
+            int enemiesInRoom = new Random().Next(1, maxEnemies + 1);
+            
+            for (int i = 0; i < enemiesInRoom; i++)
+            {
+                // Random position within the room
+                int enemyX = new Random().Next(room.Bounds.X + 50, room.Bounds.X + room.Bounds.Width - 50);
+                int enemyY = new Random().Next(room.Bounds.Y + 50, room.Bounds.Y + room.Bounds.Height - 50);
+                
+                // Create a random enemy type
+                Enemy enemy = null;
+                int enemyType = new Random().Next(3); // 0 = basic, 1 = fast, 2 = ranged
+                
+                switch (enemyType)
                 {
-                    if (room.Type == RoomType.Treasure)
-                    {
-                        treasureRoom = room;
+                    case 0: // Basic enemy
+                        enemy = new Enemy(
+                            new Vector2(enemyX, enemyY),
+                            Content.Load<Texture2D>("EnemySprite"),
+                            EnemyHealth);
                         break;
-                    }
+                    case 1: // Fast enemy
+                        enemy = new FastEnemy(
+                            new Vector2(enemyX, enemyY),
+                            _fastEnemyTexture,
+                            FastEnemyHealth);
+                        break;
+                    case 2: // Ranged enemy
+                        enemy = new RangedEnemy(
+                            new Vector2(enemyX, enemyY),
+                            _rangedEnemyTexture,
+                            _projectileTexture,
+                            RangedEnemyHealth);
+                        break;
                 }
                 
-                // Remove treasure room from available rooms for enemy spawning
-                if (treasureRoom != null)
+                if (enemy != null)
                 {
-                    availableRooms.Remove(treasureRoom);
+                    _enemies.Add(enemy);
                 }
+            }
+            
+            // Spawn destructible crates
+            SpawnCratesInRoom(room);
+            
+            // Spawn spike traps
+            SpawnSpikeTrapsInRoom(room);
+        }
+        
+        /// <summary>
+        /// Spawns decorative crates that don't contain enemies or hazards.
+        /// </summary>
+        /// <param name="room">The room to spawn crates in.</param>
+        /// <param name="minCrates">The minimum number of crates.</param>
+        /// <param name="maxCrates">The maximum number of crates.</param>
+        private void SpawnDecorationCrates(Room room, int minCrates, int maxCrates)
+        {
+            // Retrieve crate texture
+            Texture2D crateTexture = null;
+            
+            try
+            {
+                crateTexture = Content.Load<Texture2D>("CrateSprite");
+            }
+            catch
+            {
+                // Create placeholder if texture doesn't exist
+                crateTexture = new Texture2D(GraphicsDevice, 32, 32);
+                Color[] colorData = new Color[32 * 32];
+                for (int i = 0; i < colorData.Length; i++)
+                {
+                    colorData[i] = Color.SaddleBrown;
+                }
+                crateTexture.SetData(colorData);
+            }
+            
+            // Decide how many crates to spawn
+            int crateCount = new Random().Next(minCrates, maxCrates + 1);
+            
+            for (int i = 0; i < crateCount; i++)
+            {
+                // Random position within the room
+                int crateX = new Random().Next(room.Bounds.X + 100, room.Bounds.X + room.Bounds.Width - 100);
+                int crateY = new Random().Next(room.Bounds.Y + 100, room.Bounds.Y + room.Bounds.Height - 100);
                 
-                // Position weaving altar in a random room (not starting or treasure)
-                if (availableRooms.Count > 0)
-                {
-                    // Choose a room for the altar
-                    Room altarRoom = availableRooms[new Random().Next(availableRooms.Count)];
-                    availableRooms.Remove(altarRoom); // No enemies in altar room
-                    
-                    // Position altar in the room center
-                    Vector2 altarPosition = altarRoom.Center;
-                    
-                    // Adjust for altar sprite center
-                    altarPosition.X -= (_weavingAltar.Sprite?.Width ?? 0) / 2;
-                    altarPosition.Y -= (_weavingAltar.Sprite?.Height ?? 0) / 2;
-                    
-                    _weavingAltar.Position = altarPosition;
-                    
-                    Console.WriteLine($"Positioned altar at {altarPosition}");
-                }
+                // Create the crate
+                DestructibleCrate crate = new DestructibleCrate(
+                    new Vector2(crateX, crateY),
+                    crateTexture,
+                    2); // Less health for decoration crates
                 
-                // Spawn treasure chest in the treasure room
-                if (treasureRoom != null)
-                {
-                    // Retrieve chest textures
-                    Texture2D chestClosedTexture = null;
-                    Texture2D chestOpenTexture = null;
-                    
-                    try
-                    {
-                        chestClosedTexture = Content.Load<Texture2D>("ChestClosedSprite");
-                        chestOpenTexture = Content.Load<Texture2D>("ChestOpenSprite");
-                    }
-                    catch
-                    {
-                        // Create placeholders if they don't exist yet
-                        chestClosedTexture = new Texture2D(GraphicsDevice, 32, 32);
-                        Color[] closedColorData = new Color[1024];
-                        for (int i = 0; i < 1024; i++) closedColorData[i] = Color.Goldenrod;
-                        chestClosedTexture.SetData(closedColorData);
-                        
-                        chestOpenTexture = new Texture2D(GraphicsDevice, 32, 32);
-                        Color[] openColorData = new Color[1024];
-                        for (int i = 0; i < 1024; i++)
-                        {
-                            int x = i % 32;
-                            int y = i / 32;
-                            if (x >= 8 && x <= 24 && y >= 8 && y <= 24) openColorData[i] = Color.Black;
-                            else openColorData[i] = Color.Goldenrod;
-                        }
-                        chestOpenTexture.SetData(openColorData);
-                    }
-                    
-                    // Position chest in the treasure room center
-                    Vector2 chestPosition = treasureRoom.Center;
-                    chestPosition.X -= (chestClosedTexture?.Width ?? 0) / 2;
-                    chestPosition.Y -= (chestClosedTexture?.Height ?? 0) / 2;
-                    
-                    TreasureChest chest = new TreasureChest(chestPosition, chestClosedTexture, chestOpenTexture);
-                    _treasureChests.Add(chest);
-                    
-                    Console.WriteLine($"Positioned treasure chest in treasure room at {chestPosition}");
-                    
-                    // Place a door at the entrance to the treasure room
-                    // This requires finding a corridor connected to the treasure room
-                    PlaceDoorToRoom(treasureRoom);
-                }
-                
-                // Spawn enemies in the remaining rooms
-                foreach (Room room in availableRooms)
-                {
-                    // Decide how many enemies to spawn based on room size
-                    int maxEnemies = Math.Max(1, room.Bounds.Width * room.Bounds.Height / 300000); // 1-3 enemies based on room size
-                    int enemiesInRoom = new Random().Next(1, maxEnemies + 1);
-                    
-                    for (int i = 0; i < enemiesInRoom; i++)
-                    {
-                        // Random position within the room
-                        int enemyX = new Random().Next(room.Bounds.X + 50, room.Bounds.X + room.Bounds.Width - 50);
-                        int enemyY = new Random().Next(room.Bounds.Y + 50, room.Bounds.Y + room.Bounds.Height - 50);
-                        
-                        // Create a random enemy type
-                        Enemy enemy = null;
-                        int enemyType = new Random().Next(3); // 0 = basic, 1 = fast, 2 = ranged
-                        
-                        switch (enemyType)
-                        {
-                            case 0: // Basic enemy
-                                enemy = new Enemy(
-                                    new Vector2(enemyX, enemyY),
-                                    Content.Load<Texture2D>("EnemySprite"),
-                                    EnemyHealth);
-                                break;
-                            case 1: // Fast enemy
-                                enemy = new FastEnemy(
-                                    new Vector2(enemyX, enemyY),
-                                    _fastEnemyTexture,
-                                    FastEnemyHealth);
-                                break;
-                            case 2: // Ranged enemy
-                                enemy = new RangedEnemy(
-                                    new Vector2(enemyX, enemyY),
-                                    _rangedEnemyTexture,
-                                    _projectileTexture,
-                                    RangedEnemyHealth);
-                                break;
-                        }
-                        
-                        if (enemy != null)
-                        {
-                            _enemies.Add(enemy);
-                        }
-                    }
-                    
-                    // Spawn some crates in the room
-                    SpawnCratesInRoom(room);
-                    
-                    // Spawn some spike traps in the room
-                    SpawnSpikeTrapsInRoom(room);
-                }
+                _crates.Add(crate);
             }
         }
         
@@ -814,51 +964,94 @@ namespace AetheriumDepths
                 doorUnlockedTexture.SetData(unlockedColorData);
             }
             
-            // Find a random corridor connecting to this room
-            // This is a simplified approach - in a real implementation, you would analyze
-            // the dungeon structure to find actual corridor-room connections
+            // Find the best position for the door by checking connections to other rooms
+            Vector2 doorPosition = FindBestDoorPosition(room);
             
-            // For now, we'll place the door at a position near the room edge
-            Random random = new Random();
-            int side = random.Next(4); // 0 = top, 1 = right, 2 = bottom, 3 = left
+            // Create door with proper size and visibility
+            Door door = new Door(doorPosition, doorLockedTexture, doorUnlockedTexture);
             
-            Vector2 doorPosition;
+            // Ensure door is locked by default
+            door.Lock();
+            
+            // Add to doors list
+            _doors.Add(door);
+            
+            Console.WriteLine($"Placed locked door to {room.Type} room at {doorPosition}");
+        }
+        
+        /// <summary>
+        /// Finds the best position to place a door for a room based on its connections.
+        /// </summary>
+        /// <param name="room">The room to find a door position for.</param>
+        /// <returns>The best position for a door.</returns>
+        private Vector2 FindBestDoorPosition(Room room)
+        {
+            // Check if we can find a corridor connection first
+            foreach (Rectangle corridor in _currentDungeon.Corridors)
+            {
+                // Check if this corridor connects to our room
+                if (corridor.Intersects(room.Bounds))
+                {
+                    // Determine if it's a horizontal or vertical corridor
+                    bool isHorizontal = corridor.Height < corridor.Width;
+                    
+                    if (isHorizontal)
+                    {
+                        // Place door at the intersection of corridor and room boundary
+                        if (corridor.X < room.Bounds.X) // Corridor from left
+                        {
+                            return new Vector2(room.Bounds.X + 5, corridor.Y + corridor.Height / 2);
+                        }
+                        else // Corridor from right
+                        {
+                            return new Vector2(room.Bounds.X + room.Bounds.Width - 5, corridor.Y + corridor.Height / 2);
+                        }
+                    }
+                    else // Vertical corridor
+                    {
+                        // Place door at the intersection of corridor and room boundary
+                        if (corridor.Y < room.Bounds.Y) // Corridor from above
+                        {
+                            return new Vector2(corridor.X + corridor.Width / 2, room.Bounds.Y + 5);
+                        }
+                        else // Corridor from below
+                        {
+                            return new Vector2(corridor.X + corridor.Width / 2, room.Bounds.Y + room.Bounds.Height - 5);
+                        }
+                    }
+                }
+            }
+            
+            // Fallback if no corridor intersection found - use room center with offset
+            int side = _random.Next(4); // 0 = top, 1 = right, 2 = bottom, 3 = left
+            Vector2 position;
+            
             switch (side)
             {
                 case 0: // Top
-                    doorPosition = new Vector2(
+                    position = new Vector2(
                         room.Bounds.X + room.Bounds.Width / 2,
                         room.Bounds.Y + 20);
                     break;
                 case 1: // Right
-                    doorPosition = new Vector2(
+                    position = new Vector2(
                         room.Bounds.X + room.Bounds.Width - 20,
                         room.Bounds.Y + room.Bounds.Height / 2);
                     break;
                 case 2: // Bottom
-                    doorPosition = new Vector2(
+                    position = new Vector2(
                         room.Bounds.X + room.Bounds.Width / 2,
                         room.Bounds.Y + room.Bounds.Height - 20);
                     break;
                 case 3: // Left
                 default:
-                    doorPosition = new Vector2(
+                    position = new Vector2(
                         room.Bounds.X + 20,
                         room.Bounds.Y + room.Bounds.Height / 2);
                     break;
             }
             
-            // Adjust for door sprite center
-            doorPosition.X -= (doorLockedTexture?.Width ?? 0) / 2;
-            doorPosition.Y -= (doorLockedTexture?.Height ?? 0) / 2;
-            
-            Door door = new Door(doorPosition, doorLockedTexture, doorUnlockedTexture);
-            _doors.Add(door);
-            
-            Console.WriteLine($"Placed door to {room.Type} room at {doorPosition}");
-            
-            // Also place a key somewhere in the dungeon in a non-treasure room
-            SpawnKeyInRandomRoom(room);
+            return position;
         }
         
         /// <summary>
@@ -1007,17 +1200,66 @@ namespace AetheriumDepths
         /// <summary>
         /// Event handler for enemy killed events, handles loot drops.
         /// </summary>
-        /// <param name="killedPosition">The position where the enemy was killed.</param>
-        private void OnEnemyKilled(Vector2 killedPosition)
+        /// <param name="killedEnemy">The enemy that was killed.</param>
+        private void OnEnemyKilled(Enemy killedEnemy)
         {
-            // Random chance to spawn a health potion
-            if (Random.Shared.NextDouble() < EnemySpawnChance)
+            // Always drop a key if the enemy was a boss
+            if (killedEnemy is BossEnemy)
             {
-                // Create health potion at the enemy's position
-                var healthPotion = new LootItem(killedPosition, _healthPotionTexture, LootType.HealthPotion);
-                _lootItems.Add(healthPotion);
+                // Retrieve key texture
+                Texture2D keyTexture = null;
                 
-                Console.WriteLine("Health potion dropped at enemy death location");
+                try
+                {
+                    keyTexture = Content.Load<Texture2D>("KeySprite");
+                }
+                catch
+                {
+                    // Create placeholder if it doesn't exist yet
+                    keyTexture = new Texture2D(GraphicsDevice, 16, 16);
+                    Color[] keyColorData = new Color[256];
+                    Array.Fill(keyColorData, Color.Yellow);
+                    keyTexture.SetData(keyColorData);
+                }
+                
+                // Create key item at the boss's position
+                LootItem keyItem = new LootItem(
+                    killedEnemy.Position,
+                    keyTexture,
+                    LootType.Key);
+                    
+                _lootItems.Add(keyItem);
+                Console.WriteLine($"Boss dropped a key at {killedEnemy.Position}");
+                return;
+            }
+            
+            // For non-boss enemies, random chance to drop loot
+            if (_random.Next(100) < 30) // 30% chance
+            {
+                // Retrieve essence texture
+                Texture2D essenceTexture = null;
+                
+                try
+                {
+                    essenceTexture = Content.Load<Texture2D>("AetheriumEssenceSprite");
+                }
+                catch
+                {
+                    // Create placeholder if it doesn't exist yet
+                    essenceTexture = new Texture2D(GraphicsDevice, 16, 16);
+                    Color[] essenceColorData = new Color[256];
+                    Array.Fill(essenceColorData, Color.Blue);
+                    essenceTexture.SetData(essenceColorData);
+                }
+                
+                // Create essence item at the killed enemy's position
+                LootItem essence = new LootItem(
+                    killedEnemy.Position,
+                    essenceTexture,
+                    LootType.HealthPotion); // Using HealthPotion temporarily since we don't have an AetheriumEssence type yet
+                    
+                _lootItems.Add(essence);
+                Console.WriteLine($"Enemy dropped essence at {killedEnemy.Position}");
             }
         }
 
@@ -1034,6 +1276,9 @@ namespace AetheriumDepths
             
             // Update player
             _player.Update(gameTime, _inputManager, _currentDungeon);
+            
+            // Check for collisions with locked doors and prevent movement through them
+            HandleDoorCollisions();
             
             // DEBUG: Press F1 to destroy all crates (test crate destruction)
             if (Keyboard.GetState().IsKeyDown(Keys.F1))
@@ -1338,21 +1583,37 @@ namespace AetheriumDepths
             }
             
             // Check for door interaction
+            _nearAnyDoor = false;
             foreach (var door in _doors)
             {
-                if (door.IsLocked && 
-                    Vector2.Distance(_player.Position, door.Position) < InteractionDistance &&
-                    _inputManager.IsActionJustPressed(InputManager.GameAction.Interact))
+                if (Vector2.Distance(_player.Position, door.Position) < InteractionDistance)
                 {
-                    if (_player.KeyCount > 0)
+                    _nearAnyDoor = true;
+                    
+                    if (_inputManager.IsActionJustPressed(InputManager.GameAction.Interact))
                     {
-                        _player.UseKey();
-                        door.Unlock();
-                        Console.WriteLine("Door unlocked with a key!");
-                    }
-                    else
-                    {
-                        Console.WriteLine("This door is locked. You need a key to unlock it.");
+                        if (door.IsLocked)
+                        {
+                            if (_player.KeyCount > 0)
+                            {
+                                _player.UseKey();
+                                door.Unlock();
+                                _popupMessage = "Door unlocked with a key!";
+                                _popupTimer = POPUP_DURATION;
+                                Console.WriteLine("Door unlocked with a key!");
+                            }
+                            else
+                            {
+                                _popupMessage = "This door is locked. You need a key to unlock it.";
+                                _popupTimer = POPUP_DURATION;
+                                Console.WriteLine("This door is locked. You need a key to unlock it.");
+                            }
+                        }
+                        else
+                        {
+                            _popupMessage = "The door is already unlocked.";
+                            _popupTimer = POPUP_DURATION;
+                        }
                     }
                 }
             }
@@ -1539,7 +1800,7 @@ namespace AetheriumDepths
                 // Draw attack hitbox if debugging
                 if (enemy.IsAttacking)
                 {
-                    enemy.DrawAttackHitbox(_spriteBatch, _debugTexture);
+                    enemy.DrawAttackHitbox(_spriteBatch);
                 }
             }
             
@@ -1814,13 +2075,26 @@ namespace AetheriumDepths
                         (int)(room.Bounds.Width * scale),
                         (int)(room.Bounds.Height * scale));
                     
-                    // Draw room outline
-                    Color roomColor = Color.LightGray;
+                    // Determine room color based on type
+                    Color roomColor;
                     
-                    // Highlight special rooms
-                    if (room == _currentDungeon.StartingRoom)
+                    switch (room.Type)
                     {
-                        roomColor = Color.LightBlue; // Starting room
+                        case RoomType.Start:
+                            roomColor = Color.Green; // Starting room is green
+                            break;
+                        case RoomType.Boss:
+                            roomColor = Color.Red; // Boss room is red
+                            break;
+                        case RoomType.Treasure:
+                            roomColor = Color.Gold; // Treasure room is gold
+                            break;
+                        case RoomType.Altar:
+                            roomColor = new Color((byte)180, (byte)100, (byte)255); // Altar room is purple
+                            break;
+                        default:
+                            roomColor = Color.LightGray; // Normal rooms are light gray
+                            break;
                     }
                     
                     _spriteBatch.Draw(_debugTexture, minimapRoom, new Color(roomColor.R, roomColor.G, roomColor.B, (byte)100));
@@ -1946,6 +2220,52 @@ namespace AetheriumDepths
                     
                     Color textColor = _nearbyChest.IsOpen ? Color.Gray : Color.Gold;
                     _spriteBatch.DrawString(_gameFont, promptText, textPosition, textColor);
+                }
+            }
+            
+            // If near a door, draw interaction prompt
+            if (_nearAnyDoor)
+            {
+                // Draw interaction prompt panel
+                Rectangle promptBackground = new Rectangle(
+                    GraphicsDevice.Viewport.Width / 2 - 150,
+                    GraphicsDevice.Viewport.Height - 100,
+                    300,
+                    70);
+                _spriteBatch.Draw(_debugTexture, promptBackground, new Color((byte)0, (byte)0, (byte)0, (byte)180));
+                
+                // Draw interaction prompt text
+                if (_gameFont != null)
+                {
+                    string promptText;
+                    Color textColor;
+                    
+                    if (_player.KeyCount > 0)
+                    {
+                        promptText = "Press E to use Key on Door";
+                        textColor = Color.Gold;
+                    }
+                    else
+                    {
+                        promptText = "Door is Locked - Need a Key";
+                        textColor = Color.Red;
+                    }
+                    
+                    Vector2 textSize = _gameFont.MeasureString(promptText);
+                    Vector2 textPosition = new Vector2(
+                        promptBackground.X + (promptBackground.Width - textSize.X) / 2,
+                        promptBackground.Y + 25);
+                    
+                    _spriteBatch.DrawString(_gameFont, promptText, textPosition, textColor);
+                    
+                    // Show current key count
+                    string keyText = $"Keys: {_player.KeyCount}";
+                    Vector2 keyTextSize = _gameFont.MeasureString(keyText);
+                    Vector2 keyTextPosition = new Vector2(
+                        promptBackground.X + (promptBackground.Width - keyTextSize.X) / 2,
+                        promptBackground.Y + 45);
+                    
+                    _spriteBatch.DrawString(_gameFont, keyText, keyTextPosition, Color.White);
                 }
             }
             
@@ -2123,5 +2443,62 @@ namespace AetheriumDepths
         }
 
         #endregion
+
+        /// <summary>
+        /// Handles collisions between the player and locked doors to prevent passing through them.
+        /// </summary>
+        private void HandleDoorCollisions()
+        {
+            foreach (Door door in _doors)
+            {
+                if (door.IsLocked)
+                {
+                    // Create a slightly larger collision bounds for the door
+                    // to ensure the player can't get too close or clip through
+                    Rectangle doorCollisionBounds = new Rectangle(
+                        (int)(door.Position.X - (door.SpriteLocked.Width * 0.8f)),
+                        (int)(door.Position.Y - (door.SpriteLocked.Height * 0.8f)),
+                        (int)(door.SpriteLocked.Width * 1.6f),
+                        (int)(door.SpriteLocked.Height * 1.6f));
+                    
+                    // Check if player is colliding with the door
+                    if (_player.Bounds.Intersects(doorCollisionBounds))
+                    {
+                        // Calculate push direction (away from door center)
+                        Vector2 doorCenter = new Vector2(
+                            door.Position.X,
+                            door.Position.Y);
+                            
+                        Vector2 pushDirection = _player.Position - doorCenter;
+                        
+                        // Normalize and scale the push
+                        if (pushDirection != Vector2.Zero)
+                        {
+                            pushDirection.Normalize();
+                            
+                            // Push the player away from the door
+                            float pushDistance = 5.0f; // Pixels to push per frame
+                            Vector2 newPosition = _player.Position + (pushDirection * pushDistance);
+                            
+                            // Make sure the new position is valid in the dungeon
+                            Rectangle newBounds = new Rectangle(
+                                (int)newPosition.X,
+                                (int)newPosition.Y,
+                                _player.Bounds.Width,
+                                _player.Bounds.Height);
+                                
+                            if (_currentDungeon.IsMovementValid(newBounds))
+                            {
+                                _player.Position = newPosition;
+                            }
+                            
+                            // Show a popup if the player is trying to enter a locked door
+                            _popupMessage = "This door is locked! Find a key to unlock it.";
+                            _popupTimer = 1.0f; // Show for 1 second
+                        }
+                    }
+                }
+            }
+        }
     }
 } 

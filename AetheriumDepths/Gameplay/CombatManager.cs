@@ -14,9 +14,9 @@ namespace AetheriumDepths.Gameplay
         // Events
         /// <summary>
         /// Event triggered when an enemy is killed.
-        /// Provides the position of the killed enemy.
+        /// Provides the enemy that was killed.
         /// </summary>
-        public event Action<Vector2> EnemyKilled;
+        public event Action<Enemy> EnemyKilled;
 
         // Combat constants
         private readonly int _enemyTouchDamage;
@@ -167,8 +167,8 @@ namespace AetheriumDepths.Gameplay
             // Reward player with essence
             _player.AddAetheriumEssence(_aetheriumEssenceReward);
             
-            // Trigger the EnemyKilled event with the enemy's position
-            EnemyKilled?.Invoke(enemy.Position);
+            // Trigger the EnemyKilled event with the enemy instance
+            EnemyKilled?.Invoke(enemy);
             
             Console.WriteLine($"Enemy defeated! Player received {_aetheriumEssenceReward} Aetherium Essence.");
         }

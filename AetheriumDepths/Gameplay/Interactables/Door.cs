@@ -28,8 +28,8 @@ namespace AetheriumDepths.Gameplay.Interactables
         /// The bounding rectangle used for collision detection.
         /// </summary>
         public Rectangle Bounds => new Rectangle(
-            (int)Position.X, 
-            (int)Position.Y, 
+            (int)(Position.X - (SpriteLocked?.Width ?? 0) / 2), 
+            (int)(Position.Y - (SpriteLocked?.Height ?? 0) / 2), 
             SpriteLocked?.Width ?? 0, 
             SpriteLocked?.Height ?? 0);
             
@@ -70,6 +70,22 @@ namespace AetheriumDepths.Gameplay.Interactables
         }
         
         /// <summary>
+        /// Locks the door if it's currently unlocked.
+        /// </summary>
+        /// <returns>True if the door was locked by this call; false if it was already locked.</returns>
+        public bool Lock()
+        {
+            if (!IsLocked)
+            {
+                IsLocked = true;
+                Console.WriteLine("Door locked!");
+                return true;
+            }
+            
+            return false;
+        }
+        
+        /// <summary>
         /// Draws the door with the appropriate sprite based on its state.
         /// </summary>
         /// <param name="spriteBatch">The sprite batch used for rendering.</param>
@@ -81,14 +97,17 @@ namespace AetheriumDepths.Gameplay.Interactables
             // Draw the door
             if (currentSprite != null)
             {
+                float scale = 1.2f; // Make the door slightly larger for visibility
+                Color tint = IsLocked ? Color.Red : Color.Green; // Red for locked, green for unlocked
+                
                 spriteBatch.Draw(
                     currentSprite,
                     Position,
                     null,
-                    Color.White,
+                    tint,
                     0f,
-                    Vector2.Zero,
-                    1f,
+                    new Vector2(currentSprite.Width / 2, currentSprite.Height / 2), // Center the door at its position
+                    scale,
                     SpriteEffects.None,
                     0f);
             }

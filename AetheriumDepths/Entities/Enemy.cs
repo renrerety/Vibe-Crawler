@@ -43,17 +43,27 @@ namespace AetheriumDepths.Entities
         /// <summary>
         /// The range at which the enemy detects and pursues the player.
         /// </summary>
-        public float DetectionRange { get; set; } = 200f;
+        public virtual float DetectionRange { get; set; } = 200f;
         
         /// <summary>
         /// The range at which the enemy can attack the player.
         /// </summary>
-        public float AttackRange { get; set; } = 60f;
+        public virtual float AttackRange { get; set; } = 60f;
         
         /// <summary>
         /// The movement speed of the enemy in pixels per second.
         /// </summary>
-        public float MovementSpeed { get; set; } = 100f;
+        public virtual float MovementSpeed { get; set; } = 100f;
+        
+        /// <summary>
+        /// The cooldown duration between attacks in seconds.
+        /// </summary>
+        public virtual float AttackCooldown => ATTACK_COOLDOWN;
+        
+        /// <summary>
+        /// The duration of an attack in seconds.
+        /// </summary>
+        public virtual float AttackDuration => ATTACK_DURATION;
         
         /// <summary>
         /// The direction the enemy is currently facing.
@@ -109,6 +119,15 @@ namespace AetheriumDepths.Entities
             
             // Initialize attack cooldown as ready to attack
             _attackCooldownTimer = 0f;
+        }
+        
+        /// <summary>
+        /// Updates the bounds of the enemy.
+        /// </summary>
+        protected virtual void UpdateBounds()
+        {
+            // Base implementation does nothing as Bounds is calculated on-demand
+            // but derived classes can override this
         }
 
         /// <summary>
@@ -212,6 +231,23 @@ namespace AetheriumDepths.Entities
         }
         
         /// <summary>
+        /// Calculates the attack hitbox based on position and facing direction.
+        /// </summary>
+        /// <returns>A rectangle representing the attack hitbox.</returns>
+        protected virtual Rectangle CalculateAttackHitbox()
+        {
+            // Calculate attack hitbox position based on enemy position and facing direction
+            Vector2 hitboxCenter = Position + (FacingDirection * (Sprite.Width + ATTACK_SIZE) / 2);
+            
+            // Create and return attack hitbox
+            return new Rectangle(
+                (int)(hitboxCenter.X - ATTACK_SIZE / 2),
+                (int)(hitboxCenter.Y - ATTACK_SIZE / 2),
+                ATTACK_SIZE,
+                ATTACK_SIZE);
+        }
+        
+        /// <summary>
         /// Initiates an attack in the direction of the player.
         /// </summary>
         /// <param name="directionToPlayer">Direction vector pointing to the player.</param>
@@ -219,8 +255,8 @@ namespace AetheriumDepths.Entities
         {
             // Start attack
             IsAttacking = true;
-            _attackTimer = ATTACK_DURATION;
-            _attackCooldownTimer = ATTACK_COOLDOWN;
+            _attackTimer = AttackDuration;
+            _attackCooldownTimer = AttackCooldown;
             
             // Normalize direction if it's not already
             if (directionToPlayer.Length() > 0)
@@ -229,15 +265,8 @@ namespace AetheriumDepths.Entities
                 FacingDirection = directionToPlayer;
             }
             
-            // Calculate attack hitbox position based on enemy position and facing direction
-            Vector2 hitboxCenter = Position + (FacingDirection * (Sprite.Width + ATTACK_SIZE) / 2);
-            
-            // Create attack hitbox
-            AttackHitbox = new Rectangle(
-                (int)(hitboxCenter.X - ATTACK_SIZE / 2),
-                (int)(hitboxCenter.Y - ATTACK_SIZE / 2),
-                ATTACK_SIZE,
-                ATTACK_SIZE);
+            // Set the attack hitbox
+            AttackHitbox = CalculateAttackHitbox();
             
             Console.WriteLine($"Enemy attacked in direction {FacingDirection}");
         }
@@ -295,12 +324,23 @@ namespace AetheriumDepths.Entities
         /// Draws the attack hitbox for debugging.
         /// </summary>
         /// <param name="spriteBatch">The sprite batch to use for drawing.</param>
-        /// <param name="debugTexture">The debug texture to use for drawing.</param>
-        public void DrawAttackHitbox(SpriteBatch spriteBatch, Texture2D debugTexture)
+        public void DrawAttackHitbox(SpriteBatch spriteBatch)
         {
-            if (!IsAttacking || debugTexture == null) return;
+            if (!IsAttacking || _debugTexture == null) return;
             
-            spriteBatch.Draw(debugTexture, AttackHitbox, Color.Red * 0.5f);
+            spriteBatch.Draw(_debugTexture, AttackHitbox, Color.Red * 0.5f);
+        }
+        
+        // Field for debug texture
+        private static Texture2D _debugTexture;
+        
+        /// <summary>
+        /// Sets the debug texture used for drawing attack hitboxes.
+        /// </summary>
+        /// <param name="debugTexture">The debug texture to use.</param>
+        public static void SetDebugTexture(Texture2D debugTexture)
+        {
+            _debugTexture = debugTexture;
         }
     }
 } 

@@ -21,7 +21,17 @@ namespace AetheriumDepths.Generation
         /// <summary>
         /// Room containing treasure chests.
         /// </summary>
-        Treasure
+        Treasure,
+        
+        /// <summary>
+        /// Room containing the Aetherium Weaving altar.
+        /// </summary>
+        Altar,
+        
+        /// <summary>
+        /// Room containing the boss enemy.
+        /// </summary>
+        Boss
     }
     
     /// <summary>

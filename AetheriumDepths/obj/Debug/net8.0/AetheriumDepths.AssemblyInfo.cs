@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AetheriumDepths")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6ab663c893ea38d0e7245492ed6167ff8daef1d4")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e3825dce413d0cfc10835bd010193f5e91f7f8a8")]
 [assembly: System.Reflection.AssemblyProductAttribute("AetheriumDepths")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AetheriumDepths")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

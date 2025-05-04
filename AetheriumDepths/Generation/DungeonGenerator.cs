@@ -74,49 +74,8 @@ namespace AetheriumDepths.Generation
             // Create corridors between rooms
             CreateCorridors(dungeon);
             
-            // For consistency, make sure the first room in the list is the most suitable starting room
-            // (e.g., it could be the largest room or one closest to the center)
-            if (dungeon.Rooms.Count > 0)
-            {
-                // Find a room near the center to make it the starting room
-                Room centerRoom = FindRoomNearestToCenter(dungeon.Rooms, dungeonArea.Center);
-                
-                // Move the center room to the beginning of the list
-                if (centerRoom != null && dungeon.Rooms.Contains(centerRoom) && dungeon.Rooms[0] != centerRoom)
-                {
-                    dungeon.Rooms.Remove(centerRoom);
-                    dungeon.Rooms.Insert(0, centerRoom);
-                }
-                
-                // Designate the first room as the starting room
-                dungeon.Rooms[0].Type = RoomType.Start;
-            }
-            
-            // Designate a treasure room (not the starting room)
-            if (dungeon.Rooms.Count > 1)
-            {
-                // Pick a room that's not the starting room and not adjacent to it for the treasure room
-                // We'll use a simple approach: pick the farthest room from the starting room
-                Room startingRoom = dungeon.Rooms[0];
-                Room treasureRoom = null;
-                float maxDistance = 0;
-                
-                for (int i = 1; i < dungeon.Rooms.Count; i++)
-                {
-                    float distance = Vector2.Distance(startingRoom.Center, dungeon.Rooms[i].Center);
-                    if (distance > maxDistance)
-                    {
-                        maxDistance = distance;
-                        treasureRoom = dungeon.Rooms[i];
-                    }
-                }
-                
-                if (treasureRoom != null)
-                {
-                    treasureRoom.Type = RoomType.Treasure;
-                    Console.WriteLine("Designated a treasure room!");
-                }
-            }
+            // Strategic room type designation
+            DesignateRoomTypes(dungeon, dungeonArea.Center);
             
             return dungeon;
         }
@@ -396,6 +355,101 @@ namespace AetheriumDepths.Generation
             }
             
             return nearestRoom;
+        }
+
+        /// <summary>
+        /// Strategically assigns room types to ensure gameplay variety.
+        /// </summary>
+        /// <param name="dungeon">The dungeon to assign room types to.</param>
+        /// <param name="center">The center point of the dungeon.</param>
+        private void DesignateRoomTypes(Dungeon dungeon, Point center)
+        {
+            // Make sure we have enough rooms for all special types
+            if (dungeon.Rooms.Count < 4)
+            {
+                Console.WriteLine("Warning: Not enough rooms to designate all special types!");
+                // Assign as many as we can
+                if (dungeon.Rooms.Count > 0)
+                {
+                    dungeon.Rooms[0].Type = RoomType.Start;
+                }
+                return;
+            }
+            
+            // Step 1: Designate the Start room (closest to center)
+            Room startRoom = FindRoomNearestToCenter(dungeon.Rooms, center);
+            startRoom.Type = RoomType.Start;
+            Console.WriteLine("Designated a start room near the center!");
+            
+            // Create a list of rooms that are still available for designation
+            List<Room> availableRooms = new List<Room>(dungeon.Rooms);
+            availableRooms.Remove(startRoom);
+            
+            // Step 2: Designate the Boss room (farthest from start)
+            Room bossRoom = FindFarthestRoom(availableRooms, startRoom.Center);
+            bossRoom.Type = RoomType.Boss;
+            availableRooms.Remove(bossRoom);
+            Console.WriteLine("Designated a boss room far from the start!");
+            
+            // Step 3: Designate the Treasure room (not too close to start but not as far as boss)
+            // Sort remaining rooms by distance from start (ascending)
+            availableRooms.Sort((a, b) => 
+                Vector2.Distance(a.Center, startRoom.Center).CompareTo(
+                Vector2.Distance(b.Center, startRoom.Center)));
+            
+            // Pick a room in the middle third of the sorted list
+            int middleIndex = availableRooms.Count / 2;
+            Room treasureRoom = availableRooms[middleIndex];
+            treasureRoom.Type = RoomType.Treasure;
+            availableRooms.Remove(treasureRoom);
+            Console.WriteLine("Designated a treasure room!");
+            
+            // Step 4: Designate the Altar room (accessible but different from start/boss/treasure)
+            // Try to find a room that's fairly accessible from multiple paths
+            // For now, we'll use a simple heuristic: a room with medium distance from start
+            Room altarRoom = null;
+            if (availableRooms.Count > 0)
+            {
+                // Get a room about 1/3 of the way from start (different from treasure)
+                int altarIndex = Math.Min(availableRooms.Count - 1, availableRooms.Count / 3);
+                altarRoom = availableRooms[altarIndex];
+                altarRoom.Type = RoomType.Altar;
+                availableRooms.Remove(altarRoom);
+                Console.WriteLine("Designated an altar room!");
+            }
+            
+            // Step 5: All remaining rooms are Normal
+            foreach (Room room in availableRooms)
+            {
+                room.Type = RoomType.Normal;
+            }
+            Console.WriteLine($"Designated {availableRooms.Count} normal rooms.");
+        }
+        
+        /// <summary>
+        /// Finds the room that is farthest from a given point.
+        /// </summary>
+        /// <param name="rooms">The list of rooms to search.</param>
+        /// <param name="point">The reference point.</param>
+        /// <returns>The room farthest from the point.</returns>
+        private Room FindFarthestRoom(List<Room> rooms, Vector2 point)
+        {
+            if (rooms.Count == 0) return null;
+            
+            Room farthestRoom = rooms[0];
+            float farthestDistance = Vector2.Distance(point, farthestRoom.Center);
+            
+            foreach (Room room in rooms)
+            {
+                float distance = Vector2.Distance(point, room.Center);
+                if (distance > farthestDistance)
+                {
+                    farthestDistance = distance;
+                    farthestRoom = room;
+                }
+            }
+            
+            return farthestRoom;
         }
     }
 } 
