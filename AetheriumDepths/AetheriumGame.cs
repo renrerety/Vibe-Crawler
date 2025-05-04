@@ -35,6 +35,9 @@ namespace AetheriumDepths
         // Debug texture for attack hitbox
         private Texture2D _debugTexture;
         
+        // Font for UI text
+        private SpriteFont _gameFont;
+        
         // Dungeon and generator
         private DungeonGenerator _dungeonGenerator;
         private Dungeon _currentDungeon;
@@ -119,6 +122,19 @@ namespace AetheriumDepths
             // Create debug texture for attack hitbox and room drawing
             _debugTexture = new Texture2D(GraphicsDevice, 1, 1);
             _debugTexture.SetData(new[] { Color.White });
+            
+            // Load font for UI
+            try
+            {
+                _gameFont = Content.Load<SpriteFont>("GameFont");
+                Console.WriteLine("Font loaded successfully");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading font: {ex.Message}");
+                // Create a placeholder if the font fails to load
+                _gameFont = null;
+            }
             
             // Generate dungeon for the first time
             GenerateDungeon();
@@ -508,7 +524,7 @@ namespace AetheriumDepths
             // Draw corridors
             foreach (Rectangle corridor in _currentDungeon.Corridors)
             {
-                _spriteBatch.Draw(_debugTexture, corridor, new Color(100, 100, 100, 150));
+                _spriteBatch.Draw(_debugTexture, corridor, new Color((byte)100, (byte)100, (byte)100, (byte)150));
             }
             
             // Draw each room
@@ -523,7 +539,7 @@ namespace AetheriumDepths
                     room.Bounds.Y + 2, 
                     room.Bounds.Width - 4, 
                     room.Bounds.Height - 4);
-                _spriteBatch.Draw(_debugTexture, innerRect, new Color(50, 50, 70, 50));
+                _spriteBatch.Draw(_debugTexture, innerRect, new Color((byte)50, (byte)50, (byte)70, (byte)50));
             }
             
             // Debug visualization: Draw BSP tree partitions if available
@@ -532,7 +548,7 @@ namespace AetheriumDepths
                 foreach (BSPNode leaf in _currentDungeon.LeafNodes)
                 {
                     // Draw leaf node boundaries with a different color
-                    DrawRectangleOutline(leaf.Area, new Color(50, 200, 50, 100), 1);
+                    DrawRectangleOutline(leaf.Area, new Color((byte)50, (byte)200, (byte)50, (byte)100), 1);
                 }
             }
         }
@@ -542,52 +558,270 @@ namespace AetheriumDepths
         /// </summary>
         private void DrawGameplayUI()
         {
-            // Draw a semitransparent background for UI elements
-            Rectangle uiBackground = new Rectangle(10, 10, 200, 120);
-            _spriteBatch.Draw(_debugTexture, uiBackground, new Color(0, 0, 0, 150));
+            // Draw a translucent panel for UI elements
+            Rectangle uiBackground = new Rectangle(10, 10, 240, 150);
+            _spriteBatch.Draw(_debugTexture, uiBackground, new Color((byte)0, (byte)0, (byte)0, (byte)180));
             
-            // Draw player health as a bar
-            Rectangle healthBarBackground = new Rectangle(20, 20, 180, 20);
-            Rectangle healthBarFill = new Rectangle(20, 20, (int)(180 * ((float)_player.CurrentHealth / _player.MaxHealth)), 20);
+            // === HEALTH DISPLAY ===
+            // Draw health bar label
+            if (_gameFont != null)
+            {
+                _spriteBatch.DrawString(_gameFont, "HEALTH", new Vector2(20, 15), Color.White);
+            }
             
-            // Background (red)
-            _spriteBatch.Draw(_debugTexture, healthBarBackground, new Color(100, 0, 0, 200));
-            // Fill (green)
-            _spriteBatch.Draw(_debugTexture, healthBarFill, new Color(0, 200, 0, 200));
+            // Draw health bar
+            int healthBarWidth = 200;
+            Rectangle healthBarBackground = new Rectangle(20, 35, healthBarWidth, 20);
+            Rectangle healthBarFill = new Rectangle(
+                20, 
+                35, 
+                (int)(healthBarWidth * ((float)_player.CurrentHealth / _player.MaxHealth)), 
+                20);
+            
+            // Background (dark red)
+            _spriteBatch.Draw(_debugTexture, healthBarBackground, new Color((byte)100, (byte)0, (byte)0, (byte)200));
+            // Fill (bright green)
+            _spriteBatch.Draw(_debugTexture, healthBarFill, new Color((byte)0, (byte)220, (byte)0, (byte)220));
             
             // Draw health text
-            // Would use SpriteBatch.DrawString with a SpriteFont in a full implementation
+            if (_gameFont != null)
+            {
+                string healthText = $"{_player.CurrentHealth}/{_player.MaxHealth}";
+                Vector2 textSize = _gameFont.MeasureString(healthText);
+                Vector2 textPosition = new Vector2(
+                    healthBarBackground.X + (healthBarBackground.Width - textSize.X) / 2,
+                    healthBarBackground.Y + (healthBarBackground.Height - textSize.Y) / 2);
+                _spriteBatch.DrawString(_gameFont, healthText, textPosition, Color.White);
+            }
             
-            // Draw Aetherium Essence count
-            Rectangle essenceIndicator = new Rectangle(20, 50, 10, 10);
-            _spriteBatch.Draw(_debugTexture, essenceIndicator, new Color(180, 100, 255, 255)); // Purple for essence
+            // === ESSENCE DISPLAY ===
+            int yPos = 65;
             
-            // Would draw text: $"Essence: {_player.AetheriumEssence}"
+            // Draw essence icon
+            Rectangle essenceIcon = new Rectangle(20, yPos + 2, 16, 16);
+            _spriteBatch.Draw(_debugTexture, essenceIcon, new Color((byte)180, (byte)100, (byte)255, (byte)255)); // Purple for essence
             
-            // Show active buffs
-            int buffY = 70;
+            // Draw essence text
+            if (_gameFont != null)
+            {
+                string essenceText = $"Essence: {_player.AetheriumEssence}";
+                _spriteBatch.DrawString(_gameFont, essenceText, new Vector2(45, yPos), Color.White);
+            }
+            
+            // === ACTIVE BUFFS ===
+            yPos = 95;
+            
+            // Draw active buffs header
+            if (_gameFont != null && (_player.HasDamageBuff || _player.HasSpeedBuff))
+            {
+                _spriteBatch.DrawString(_gameFont, "ACTIVE BUFFS:", new Vector2(20, yPos), Color.White);
+                yPos += 25;
+            }
             
             // Check for damage buff
             if (_player.HasDamageBuff)
             {
-                Rectangle buffIndicator = new Rectangle(20, buffY, 10, 10);
-                _spriteBatch.Draw(_debugTexture, buffIndicator, Color.Yellow); // Yellow for damage buff
+                // Draw buff icon
+                Rectangle buffIcon = new Rectangle(20, yPos + 2, 16, 16);
+                _spriteBatch.Draw(_debugTexture, buffIcon, Color.Yellow); // Yellow for damage buff
                 
-                // Draw buff duration (would use DrawString in full implementation)
-                // $"Damage Buff: {_player.GetBuffDuration(BuffType.Damage):F1}s"
+                // Draw buff text
+                if (_gameFont != null)
+                {
+                    float duration = _player.GetBuffDuration(BuffType.Damage);
+                    string buffText = $"Damage Buff: {duration:F1}s";
+                    _spriteBatch.DrawString(_gameFont, buffText, new Vector2(45, yPos), Color.Yellow);
+                }
                 
-                buffY += 20; // Space for next buff
+                yPos += 25; // Space for next buff
             }
             
             // Check for speed buff
             if (_player.HasSpeedBuff)
             {
-                Rectangle buffIndicator = new Rectangle(20, buffY, 10, 10);
-                _spriteBatch.Draw(_debugTexture, buffIndicator, Color.LightGreen); // Green for speed buff
+                // Draw buff icon
+                Rectangle buffIcon = new Rectangle(20, yPos + 2, 16, 16);
+                _spriteBatch.Draw(_debugTexture, buffIcon, Color.LightGreen); // Green for speed buff
                 
-                // Draw buff duration (would use DrawString in full implementation)
-                // $"Speed Buff: {_player.GetBuffDuration(BuffType.Speed):F1}s"
+                // Draw buff text
+                if (_gameFont != null)
+                {
+                    float duration = _player.GetBuffDuration(BuffType.Speed);
+                    string buffText = $"Speed Buff: {duration:F1}s";
+                    _spriteBatch.DrawString(_gameFont, buffText, new Vector2(45, yPos), Color.LightGreen);
+                }
             }
+            
+            // === MINIMAP ===
+            // Only draw if we have a dungeon
+            if (_currentDungeon != null)
+            {
+                // Minimap configuration
+                int minimapWidth = 200;
+                int minimapHeight = 150;
+                int minimapX = GraphicsDevice.Viewport.Width - minimapWidth - 10;
+                int minimapY = 10;
+                float minimapScale = 0.2f; // Scale factor for the minimap
+                
+                // Calculate the scaling factors between the game world and minimap
+                Rectangle gameWorldBounds = CalculateGameWorldBounds();
+                float xScale = (float)minimapWidth / gameWorldBounds.Width;
+                float yScale = (float)minimapHeight / gameWorldBounds.Height;
+                float scale = Math.Min(xScale, yScale) * 0.9f; // Use the smaller scale and leave some margin
+                
+                // Draw minimap background
+                Rectangle minimapBackground = new Rectangle(minimapX, minimapY, minimapWidth, minimapHeight);
+                _spriteBatch.Draw(_debugTexture, minimapBackground, new Color((byte)10, (byte)10, (byte)40, (byte)200));
+                
+                // Draw minimap label
+                if (_gameFont != null)
+                {
+                    _spriteBatch.DrawString(_gameFont, "MINIMAP", new Vector2(minimapX + 10, minimapY + 5), Color.White);
+                }
+                
+                // Calculate the offset to center the map in the minimap area
+                Vector2 minimapCenter = new Vector2(minimapX + minimapWidth / 2, minimapY + minimapHeight / 2);
+                Vector2 worldCenter = new Vector2(
+                    gameWorldBounds.X + gameWorldBounds.Width / 2,
+                    gameWorldBounds.Y + gameWorldBounds.Height / 2);
+                
+                // Draw corridors
+                foreach (Rectangle corridor in _currentDungeon.Corridors)
+                {
+                    // Transform corridor from world space to minimap space
+                    Rectangle minimapCorridor = new Rectangle(
+                        (int)(minimapCenter.X + (corridor.X - worldCenter.X) * scale),
+                        (int)(minimapCenter.Y + (corridor.Y - worldCenter.Y) * scale),
+                        (int)(corridor.Width * scale),
+                        (int)(corridor.Height * scale));
+                    
+                    _spriteBatch.Draw(_debugTexture, minimapCorridor, new Color((byte)100, (byte)100, (byte)100, (byte)150));
+                }
+                
+                // Draw rooms
+                foreach (Room room in _currentDungeon.Rooms)
+                {
+                    // Transform room from world space to minimap space
+                    Rectangle minimapRoom = new Rectangle(
+                        (int)(minimapCenter.X + (room.Bounds.X - worldCenter.X) * scale),
+                        (int)(minimapCenter.Y + (room.Bounds.Y - worldCenter.Y) * scale),
+                        (int)(room.Bounds.Width * scale),
+                        (int)(room.Bounds.Height * scale));
+                    
+                    // Draw room outline
+                    Color roomColor = Color.LightGray;
+                    
+                    // Highlight special rooms
+                    if (room == _currentDungeon.StartingRoom)
+                    {
+                        roomColor = Color.LightBlue; // Starting room
+                    }
+                    
+                    _spriteBatch.Draw(_debugTexture, minimapRoom, new Color(roomColor.R, roomColor.G, roomColor.B, (byte)100));
+                }
+                
+                // Draw player position on minimap
+                int playerDotSize = 5;
+                Rectangle playerDot = new Rectangle(
+                    (int)(minimapCenter.X + (_player.Position.X - worldCenter.X) * scale) - playerDotSize / 2,
+                    (int)(minimapCenter.Y + (_player.Position.Y - worldCenter.Y) * scale) - playerDotSize / 2,
+                    playerDotSize,
+                    playerDotSize);
+                _spriteBatch.Draw(_debugTexture, playerDot, Color.White);
+                
+                // Draw enemy positions on minimap
+                foreach (Enemy enemy in _enemies)
+                {
+                    if (enemy.IsActive)
+                    {
+                        int enemyDotSize = 4;
+                        Rectangle enemyDot = new Rectangle(
+                            (int)(minimapCenter.X + (enemy.Position.X - worldCenter.X) * scale) - enemyDotSize / 2,
+                            (int)(minimapCenter.Y + (enemy.Position.Y - worldCenter.Y) * scale) - enemyDotSize / 2,
+                            enemyDotSize,
+                            enemyDotSize);
+                        _spriteBatch.Draw(_debugTexture, enemyDot, Color.Red);
+                    }
+                }
+                
+                // Draw altar position on minimap
+                int altarDotSize = 4;
+                Rectangle altarDot = new Rectangle(
+                    (int)(minimapCenter.X + (_weavingAltar.Position.X - worldCenter.X) * scale) - altarDotSize / 2,
+                    (int)(minimapCenter.Y + (_weavingAltar.Position.Y - worldCenter.Y) * scale) - altarDotSize / 2,
+                    altarDotSize,
+                    altarDotSize);
+                _spriteBatch.Draw(_debugTexture, altarDot, new Color((byte)180, (byte)100, (byte)255)); // Purple for altar
+            }
+            
+            // If in altar range, draw interaction prompt
+            if (CollisionUtility.CheckAABBCollision(_player.Bounds, _weavingAltar.Bounds))
+            {
+                if (_gameFont != null)
+                {
+                    string altarText = "Press E + (1-2) to weave";
+                    Vector2 textSize = _gameFont.MeasureString(altarText);
+                    Vector2 textPosition = new Vector2(
+                        (GraphicsDevice.Viewport.Width - textSize.X) / 2,
+                        GraphicsDevice.Viewport.Height - 50);
+                    
+                    // Draw background for better visibility
+                    Rectangle textBackground = new Rectangle(
+                        (int)textPosition.X - 10,
+                        (int)textPosition.Y - 5,
+                        (int)textSize.X + 20,
+                        (int)textSize.Y + 10);
+                    _spriteBatch.Draw(_debugTexture, textBackground, new Color((byte)0, (byte)0, (byte)0, (byte)180));
+                    
+                    // Draw prompt text
+                    _spriteBatch.DrawString(_gameFont, altarText, textPosition, Color.White);
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Calculates the bounding rectangle of the entire game world.
+        /// </summary>
+        /// <returns>A rectangle encompassing all rooms and corridors.</returns>
+        private Rectangle CalculateGameWorldBounds()
+        {
+            if (_currentDungeon == null || _currentDungeon.Rooms.Count == 0)
+            {
+                return GraphicsDevice.Viewport.Bounds;
+            }
+            
+            // Start with the first room's bounds
+            int minX = _currentDungeon.Rooms[0].Bounds.X;
+            int minY = _currentDungeon.Rooms[0].Bounds.Y;
+            int maxX = minX + _currentDungeon.Rooms[0].Bounds.Width;
+            int maxY = minY + _currentDungeon.Rooms[0].Bounds.Height;
+            
+            // Expand bounds to include all rooms
+            foreach (Room room in _currentDungeon.Rooms)
+            {
+                minX = Math.Min(minX, room.Bounds.X);
+                minY = Math.Min(minY, room.Bounds.Y);
+                maxX = Math.Max(maxX, room.Bounds.X + room.Bounds.Width);
+                maxY = Math.Max(maxY, room.Bounds.Y + room.Bounds.Height);
+            }
+            
+            // Expand bounds to include all corridors
+            foreach (Rectangle corridor in _currentDungeon.Corridors)
+            {
+                minX = Math.Min(minX, corridor.X);
+                minY = Math.Min(minY, corridor.Y);
+                maxX = Math.Max(maxX, corridor.X + corridor.Width);
+                maxY = Math.Max(maxY, corridor.Y + corridor.Height);
+            }
+            
+            // Add some padding
+            const int padding = 20;
+            minX -= padding;
+            minY -= padding;
+            maxX += padding;
+            maxY += padding;
+            
+            return new Rectangle(minX, minY, maxX - minX, maxY - minY);
         }
         
         /// <summary>
@@ -642,7 +876,7 @@ namespace AetheriumDepths
                 (int)textSize.X + 20,
                 (int)textSize.Y + 20);
             
-            _spriteBatch.Draw(_debugTexture, textBg, new Color(0, 0, 0, 180));
+            _spriteBatch.Draw(_debugTexture, textBg, new Color((byte)0, (byte)0, (byte)0, (byte)180));
             
             // Would draw the text with a font here
             // _spriteBatch.DrawString(font, gameOverText, position, Color.White);

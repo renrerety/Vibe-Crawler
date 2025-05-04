@@ -1,4 +1,5 @@
 Source File,Dest File,Processor Type,Content Type,Source File Size,Dest File Size,Build Seconds
 "E:/Vibe-Crawler/AetheriumDepths/Content/AltarSprite.png","E:/Vibe-Crawler/AetheriumDepths/Content/bin/DesktopGL/Content/AltarSprite.xnb","TextureProcessor","Texture2DContent",115,4181,0.0796707
 "E:/Vibe-Crawler/AetheriumDepths/Content/EnemySprite.png","E:/Vibe-Crawler/AetheriumDepths/Content/bin/DesktopGL/Content/EnemySprite.xnb","TextureProcessor","Texture2DContent",111,4181,0.0823565
+"E:/Vibe-Crawler/AetheriumDepths/Content/GameFont.spritefont","E:/Vibe-Crawler/AetheriumDepths/Content/bin/DesktopGL/Content/GameFont.xnb","FontDescriptionProcessor","SpriteFontContent",2064,21529,0.1241611
 "E:/Vibe-Crawler/AetheriumDepths/Content/PlayerSprite.png","E:/Vibe-Crawler/AetheriumDepths/Content/bin/DesktopGL/Content/PlayerSprite.xnb","TextureProcessor","Texture2DContent",111,4181,0.0955512

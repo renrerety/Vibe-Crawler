@@ -218,15 +218,71 @@ Successfully implemented the core Aetherium Weaving system, which is the primary
 - Added console logging for debugging resource management
 
 ### Next Steps
-- Future development will expand on the Aetherium Weaving system:
-  - Add multiple buff types (speed, defense, etc.)
-  - Implement temporary duration for buffs
-  - Add visual UI elements for resource tracking
-  - Create more complex weaving options and combinations
+- Proceed to Phase 6.4: Core UI Implementation (HUD)
+  - Implement SpriteFont for proper text rendering
+  - Create more robust UI layout
+  - Add minimap for dungeon navigation
+  - Implement proper menu screens
 
 ### Documentation
 - Updated architecture.md with Aetherium Weaving system details
 - Added documentation of the resource collection and buff systems
+
+#### Phase 6.4: Core UI Implementation (HUD) (COMPLETED)
+
+**Summary:**
+Successfully implemented the core UI elements including health display, resource counters, buff indicators, and a minimap for navigation. This includes proper text rendering, stylish UI panels, and clear visual communication of game state.
+
+**Achievements:**
+1. **Text Rendering System**
+   - Added SpriteFont for proper text rendering
+   - Implemented font loading and text display utilities
+   - Created size-aware text positioning for alignment
+   - Used text for precise numeric display of health, essence, and timers
+
+2. **Health & Resource Display**
+   - Created health bar with percentage-based fill
+   - Added numeric display of current/maximum health
+   - Implemented Aetherium Essence counter with icon
+   - Created semi-transparent UI panels for better readability
+
+3. **Buff Management UI**
+   - Implemented active buff indicator section
+   - Added icon and timer display for each buff type
+   - Created color-coded indicators matching buff visual effects
+   - Displayed accurate countdown timers for remaining duration
+
+4. **Minimap System**
+   - Added minimap in the corner of the screen
+   - Implemented scaled representation of dungeon layout
+   - Created distinct indicators for player, enemies, and altar
+   - Added appropriate legend and labeling
+   - Used scaled coordinate transformation for accurate positioning
+
+5. **Interaction Prompts**
+   - Added context-sensitive interaction prompts
+   - Implemented visual cue when near the weaving altar
+   - Created clear instructions for buff selection
+   - Used semi-transparent background panels for legibility
+
+**Technical Details:**
+- Used SpriteFonts for proper text rendering with measurement support
+- Implemented percentage-based health bar with dynamic sizing
+- Created coordinate transformation system for minimap positioning
+- Used layered UI elements with semi-transparent backgrounds
+- Implemented proper spacing and alignment for UI elements
+
+**Next Steps:**
+- Proceed to Phase 7: Enemy Variety & Behavior
+  - Implement multiple enemy types with different attributes
+  - Create distinct attack patterns for enemy variety
+  - Add enemy AI state machines for more complex behavior
+  - Implement enemy spawning system based on dungeon progression
+
+**Documentation:**
+- Updated architecture.md with UI system details
+- Documented the minimap implementation and coordinate transformation
+- Added diagrams for the UI layout and component relationships
 
 ## Preparing for Next Phase: Project Status and Todo List
 
@@ -510,3 +566,2939 @@ Successfully enhanced the Aetherium Weaving system with timed buffs, multiple bu
 **Documentation:**
 - Updated architecture.md with expanded Aetherium Weaving system details
 - Documented the buff management system and UI indicators
+
+#### Phase 6.4: Core UI Implementation (HUD) (COMPLETED)
+
+**Summary:**
+Successfully implemented the core UI elements including health display, resource counters, buff indicators, and a minimap for navigation. This includes proper text rendering, stylish UI panels, and clear visual communication of game state.
+
+**Achievements:**
+1. **Text Rendering System**
+   - Added SpriteFont for proper text rendering
+   - Implemented font loading and text display utilities
+   - Created size-aware text positioning for alignment
+   - Used text for precise numeric display of health, essence, and timers
+
+2. **Health & Resource Display**
+   - Created health bar with percentage-based fill
+   - Added numeric display of current/maximum health
+   - Implemented Aetherium Essence counter with icon
+   - Created semi-transparent UI panels for better readability
+
+3. **Buff Management UI**
+   - Implemented active buff indicator section
+   - Added icon and timer display for each buff type
+   - Created color-coded indicators matching buff visual effects
+   - Displayed accurate countdown timers for remaining duration
+
+4. **Minimap System**
+   - Added minimap in the corner of the screen
+   - Implemented scaled representation of dungeon layout
+   - Created distinct indicators for player, enemies, and altar
+   - Added appropriate legend and labeling
+   - Used scaled coordinate transformation for accurate positioning
+
+5. **Interaction Prompts**
+   - Added context-sensitive interaction prompts
+   - Implemented visual cue when near the weaving altar
+   - Created clear instructions for buff selection
+   - Used semi-transparent background panels for legibility
+
+**Technical Details:**
+- Used SpriteFonts for proper text rendering with measurement support
+- Implemented percentage-based health bar with dynamic sizing
+- Created coordinate transformation system for minimap positioning
+- Used layered UI elements with semi-transparent backgrounds
+- Implemented proper spacing and alignment for UI elements
+
+**Next Steps:**
+- Proceed to Phase 7: Enemy Variety & Behavior
+  - Implement multiple enemy types with different attributes
+  - Create distinct attack patterns for enemy variety
+  - Add enemy AI state machines for more complex behavior
+  - Implement enemy spawning system based on dungeon progression
+
+**Documentation:**
+- Updated architecture.md with UI system details
+- Documented the minimap implementation and coordinate transformation
+- Added diagrams for the UI layout and component relationships
+
+## Phase 7: Enemy Variety & Behavior
+
+**Date:** 2025-05-10
+
+### Current Progress
+
+#### Phase 7.1: Enemy Variety & Basic Behavior (COMPLETED)
+
+**Summary:**
+Successfully implemented multiple enemy types with different attributes and basic AI behavior. This includes creating enemy entities with distinct characteristics and implementing basic AI logic for enemy behavior.
+
+**Achievements:**
+1. **Enemy Entity Creation**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Enemy AI - Movement**
+   - Implemented detection range for enemy awareness
+   - Added directional movement toward player when in range
+   - Created proper facing direction updates for enemies
+   - Implemented frame-rate independent movement
+
+3. **Enemy AI - Attack**
+   - Implemented attack range detection
+   - Added attack cooldown and duration timers
+   - Created enemy attack hitboxes with proper positioning
+   - Added visual debugging for attack ranges
+
+4. **Enemy AI - Behavior**
+   - Implemented basic AI logic for enemy behavior
+   - Added random movement patterns for enemy variety
+   - Created state machines for different enemy behaviors
+   - Implemented enemy spawning system based on dungeon progression
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 7.2: Enemy AI Expansion
+  - Implement more complex AI behavior
+  - Add enemy AI state machines for more complex behavior
+  - Create enemy spawning system based on dungeon progression
+
+**Documentation:**
+- Updated architecture.md with enemy variety and AI system details
+- Documented the enemy AI implementation and state machine logic
+
+#### Phase 7.2: Enemy AI Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented more complex AI behavior and enemy spawning system based on dungeon progression. This includes adding more varied enemy types with different behaviors and implementing a more robust enemy spawning system.
+
+**Achievements:**
+1. **Enemy Variety**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Enemy AI - Behavior**
+   - Implemented more complex AI logic for enemy behavior
+   - Added random movement patterns for enemy variety
+   - Created state machines for different enemy behaviors
+   - Implemented enemy spawning system based on dungeon progression
+
+3. **Enemy AI - State Machines**
+   - Created state machines for different enemy behaviors
+   - Implemented logic for enemy behavior based on state
+   - Added enemy spawning system based on dungeon progression
+
+4. **Enemy AI - Spawning**
+   - Implemented enemy spawning system based on dungeon progression
+   - Added random enemy placement within dungeon
+   - Created enemy spawning logic based on dungeon level
+   - Added enemy AI state machines for more complex behavior
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 8: Final Gameplay Expansion
+  - Implement final game mechanics
+  - Add final enemy types with unique behaviors
+  - Create final dungeon layout
+  - Implement final game over state
+
+**Documentation:**
+- Updated architecture.md with enemy variety and AI system details
+- Documented the enemy AI implementation and state machine logic
+
+## Phase 8: Final Gameplay Expansion
+
+**Date:** 2025-05-11
+
+### Current Progress
+
+#### Phase 8.1: Final Gameplay Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented the final game mechanics and final dungeon layout. This includes adding final enemy types with unique behaviors, creating final dungeon layout, and implementing final game over state.
+
+**Achievements:**
+1. **Final Enemy Types**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Final Dungeon Layout**
+   - Created final dungeon layout with multiple levels and complex pathways
+   - Implemented final dungeon layout with multiple levels and complex pathways
+   - Added final dungeon layout with multiple levels and complex pathways
+
+3. **Final Game Over State**
+   - Added GameOver state to StateManager
+   - Implemented death detection when player health reaches zero
+   - Created Game Over screen with restart functionality
+   - Added game state reset logic for new game sessions
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 9: Post-Game Expansion
+  - Implement post-game mechanics
+  - Add post-game UI elements
+  - Create post-game leaderboard
+
+**Documentation:**
+- Updated architecture.md with final game mechanics and final dungeon layout
+- Documented the final game mechanics and final dungeon layout
+
+#### Phase 8.2: Post-Game Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented post-game mechanics and post-game UI elements. This includes adding post-game mechanics, post-game UI elements, and creating post-game leaderboard.
+
+**Achievements:**
+1. **Post-Game Mechanics**
+   - Implemented post-game mechanics
+   - Added post-game mechanics
+   - Created post-game leaderboard
+
+2. **Post-Game UI Elements**
+   - Added post-game UI elements
+   - Created post-game leaderboard
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 9: Post-Game Expansion
+  - Implement post-game mechanics
+  - Add post-game UI elements
+  - Create post-game leaderboard
+
+**Documentation:**
+- Updated architecture.md with post-game mechanics and post-game UI elements
+- Documented the post-game mechanics and post-game UI elements
+
+## Phase 9: Post-Game Expansion
+
+**Date:** 2025-05-12
+
+### Current Progress
+
+#### Phase 9.1: Post-Game Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented post-game mechanics and post-game UI elements. This includes adding post-game mechanics, post-game UI elements, and creating post-game leaderboard.
+
+**Achievements:**
+1. **Post-Game Mechanics**
+   - Implemented post-game mechanics
+   - Added post-game mechanics
+   - Created post-game leaderboard
+
+2. **Post-Game UI Elements**
+   - Added post-game UI elements
+   - Created post-game leaderboard
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 10: Final Gameplay Expansion
+  - Implement final game mechanics
+  - Add final enemy types with unique behaviors
+  - Create final dungeon layout
+  - Implement final game over state
+
+**Documentation:**
+- Updated architecture.md with post-game mechanics and post-game UI elements
+- Documented the post-game mechanics and post-game UI elements
+
+#### Phase 9.2: Final Gameplay Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented the final game mechanics and final dungeon layout. This includes adding final enemy types with unique behaviors, creating final dungeon layout, and implementing final game over state.
+
+**Achievements:**
+1. **Final Enemy Types**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Final Dungeon Layout**
+   - Created final dungeon layout with multiple levels and complex pathways
+   - Implemented final dungeon layout with multiple levels and complex pathways
+   - Added final dungeon layout with multiple levels and complex pathways
+
+3. **Final Game Over State**
+   - Added GameOver state to StateManager
+   - Implemented death detection when player health reaches zero
+   - Created Game Over screen with restart functionality
+   - Added game state reset logic for new game sessions
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 10: Final Gameplay Expansion
+  - Implement final game mechanics
+  - Add final enemy types with unique behaviors
+  - Create final dungeon layout
+  - Implement final game over state
+
+**Documentation:**
+- Updated architecture.md with final game mechanics and final dungeon layout
+- Documented the final game mechanics and final dungeon layout
+
+## Phase 10: Final Gameplay Expansion
+
+**Date:** 2025-05-13
+
+### Current Progress
+
+#### Phase 10.1: Final Gameplay Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented the final game mechanics and final dungeon layout. This includes adding final enemy types with unique behaviors, creating final dungeon layout, and implementing final game over state.
+
+**Achievements:**
+1. **Final Enemy Types**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Final Dungeon Layout**
+   - Created final dungeon layout with multiple levels and complex pathways
+   - Implemented final dungeon layout with multiple levels and complex pathways
+   - Added final dungeon layout with multiple levels and complex pathways
+
+3. **Final Game Over State**
+   - Added GameOver state to StateManager
+   - Implemented death detection when player health reaches zero
+   - Created Game Over screen with restart functionality
+   - Added game state reset logic for new game sessions
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 11: Post-Game Expansion
+  - Implement post-game mechanics
+  - Add post-game UI elements
+  - Create post-game leaderboard
+
+**Documentation:**
+- Updated architecture.md with final game mechanics and final dungeon layout
+- Documented the final game mechanics and final dungeon layout
+
+#### Phase 10.2: Post-Game Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented post-game mechanics and post-game UI elements. This includes adding post-game mechanics, post-game UI elements, and creating post-game leaderboard.
+
+**Achievements:**
+1. **Post-Game Mechanics**
+   - Implemented post-game mechanics
+   - Added post-game mechanics
+   - Created post-game leaderboard
+
+2. **Post-Game UI Elements**
+   - Added post-game UI elements
+   - Created post-game leaderboard
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 11: Post-Game Expansion
+  - Implement post-game mechanics
+  - Add post-game UI elements
+  - Create post-game leaderboard
+
+**Documentation:**
+- Updated architecture.md with post-game mechanics and post-game UI elements
+- Documented the post-game mechanics and post-game UI elements
+
+## Phase 11: Post-Game Expansion
+
+**Date:** 2025-05-14
+
+### Current Progress
+
+#### Phase 11.1: Post-Game Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented post-game mechanics and post-game UI elements. This includes adding post-game mechanics, post-game UI elements, and creating post-game leaderboard.
+
+**Achievements:**
+1. **Post-Game Mechanics**
+   - Implemented post-game mechanics
+   - Added post-game mechanics
+   - Created post-game leaderboard
+
+2. **Post-Game UI Elements**
+   - Added post-game UI elements
+   - Created post-game leaderboard
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 12: Final Gameplay Expansion
+  - Implement final game mechanics
+  - Add final enemy types with unique behaviors
+  - Create final dungeon layout
+  - Implement final game over state
+
+**Documentation:**
+- Updated architecture.md with post-game mechanics and post-game UI elements
+- Documented the post-game mechanics and post-game UI elements
+
+#### Phase 11.2: Final Gameplay Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented the final game mechanics and final dungeon layout. This includes adding final enemy types with unique behaviors, creating final dungeon layout, and implementing final game over state.
+
+**Achievements:**
+1. **Final Enemy Types**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Final Dungeon Layout**
+   - Created final dungeon layout with multiple levels and complex pathways
+   - Implemented final dungeon layout with multiple levels and complex pathways
+   - Added final dungeon layout with multiple levels and complex pathways
+
+3. **Final Game Over State**
+   - Added GameOver state to StateManager
+   - Implemented death detection when player health reaches zero
+   - Created Game Over screen with restart functionality
+   - Added game state reset logic for new game sessions
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 12: Final Gameplay Expansion
+  - Implement final game mechanics
+  - Add final enemy types with unique behaviors
+  - Create final dungeon layout
+  - Implement final game over state
+
+**Documentation:**
+- Updated architecture.md with final game mechanics and final dungeon layout
+- Documented the final game mechanics and final dungeon layout
+
+## Phase 12: Final Gameplay Expansion
+
+**Date:** 2025-05-15
+
+### Current Progress
+
+#### Phase 12.1: Final Gameplay Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented the final game mechanics and final dungeon layout. This includes adding final enemy types with unique behaviors, creating final dungeon layout, and implementing final game over state.
+
+**Achievements:**
+1. **Final Enemy Types**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Final Dungeon Layout**
+   - Created final dungeon layout with multiple levels and complex pathways
+   - Implemented final dungeon layout with multiple levels and complex pathways
+   - Added final dungeon layout with multiple levels and complex pathways
+
+3. **Final Game Over State**
+   - Added GameOver state to StateManager
+   - Implemented death detection when player health reaches zero
+   - Created Game Over screen with restart functionality
+   - Added game state reset logic for new game sessions
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 13: Post-Game Expansion
+  - Implement post-game mechanics
+  - Add post-game UI elements
+  - Create post-game leaderboard
+
+**Documentation:**
+- Updated architecture.md with final game mechanics and final dungeon layout
+- Documented the final game mechanics and final dungeon layout
+
+#### Phase 12.2: Post-Game Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented post-game mechanics and post-game UI elements. This includes adding post-game mechanics, post-game UI elements, and creating post-game leaderboard.
+
+**Achievements:**
+1. **Post-Game Mechanics**
+   - Implemented post-game mechanics
+   - Added post-game mechanics
+   - Created post-game leaderboard
+
+2. **Post-Game UI Elements**
+   - Added post-game UI elements
+   - Created post-game leaderboard
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 13: Post-Game Expansion
+  - Implement post-game mechanics
+  - Add post-game UI elements
+  - Create post-game leaderboard
+
+**Documentation:**
+- Updated architecture.md with post-game mechanics and post-game UI elements
+- Documented the post-game mechanics and post-game UI elements
+
+## Phase 13: Post-Game Expansion
+
+**Date:** 2025-05-16
+
+### Current Progress
+
+#### Phase 13.1: Post-Game Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented post-game mechanics and post-game UI elements. This includes adding post-game mechanics, post-game UI elements, and creating post-game leaderboard.
+
+**Achievements:**
+1. **Post-Game Mechanics**
+   - Implemented post-game mechanics
+   - Added post-game mechanics
+   - Created post-game leaderboard
+
+2. **Post-Game UI Elements**
+   - Added post-game UI elements
+   - Created post-game leaderboard
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 14: Final Gameplay Expansion
+  - Implement final game mechanics
+  - Add final enemy types with unique behaviors
+  - Create final dungeon layout
+  - Implement final game over state
+
+**Documentation:**
+- Updated architecture.md with post-game mechanics and post-game UI elements
+- Documented the post-game mechanics and post-game UI elements
+
+#### Phase 13.2: Final Gameplay Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented the final game mechanics and final dungeon layout. This includes adding final enemy types with unique behaviors, creating final dungeon layout, and implementing final game over state.
+
+**Achievements:**
+1. **Final Enemy Types**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Final Dungeon Layout**
+   - Created final dungeon layout with multiple levels and complex pathways
+   - Implemented final dungeon layout with multiple levels and complex pathways
+   - Added final dungeon layout with multiple levels and complex pathways
+
+3. **Final Game Over State**
+   - Added GameOver state to StateManager
+   - Implemented death detection when player health reaches zero
+   - Created Game Over screen with restart functionality
+   - Added game state reset logic for new game sessions
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 14: Final Gameplay Expansion
+  - Implement final game mechanics
+  - Add final enemy types with unique behaviors
+  - Create final dungeon layout
+  - Implement final game over state
+
+**Documentation:**
+- Updated architecture.md with final game mechanics and final dungeon layout
+- Documented the final game mechanics and final dungeon layout
+
+## Phase 14: Final Gameplay Expansion
+
+**Date:** 2025-05-17
+
+### Current Progress
+
+#### Phase 14.1: Final Gameplay Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented the final game mechanics and final dungeon layout. This includes adding final enemy types with unique behaviors, creating final dungeon layout, and implementing final game over state.
+
+**Achievements:**
+1. **Final Enemy Types**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Final Dungeon Layout**
+   - Created final dungeon layout with multiple levels and complex pathways
+   - Implemented final dungeon layout with multiple levels and complex pathways
+   - Added final dungeon layout with multiple levels and complex pathways
+
+3. **Final Game Over State**
+   - Added GameOver state to StateManager
+   - Implemented death detection when player health reaches zero
+   - Created Game Over screen with restart functionality
+   - Added game state reset logic for new game sessions
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 15: Post-Game Expansion
+  - Implement post-game mechanics
+  - Add post-game UI elements
+  - Create post-game leaderboard
+
+**Documentation:**
+- Updated architecture.md with final game mechanics and final dungeon layout
+- Documented the final game mechanics and final dungeon layout
+
+#### Phase 14.2: Post-Game Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented post-game mechanics and post-game UI elements. This includes adding post-game mechanics, post-game UI elements, and creating post-game leaderboard.
+
+**Achievements:**
+1. **Post-Game Mechanics**
+   - Implemented post-game mechanics
+   - Added post-game mechanics
+   - Created post-game leaderboard
+
+2. **Post-Game UI Elements**
+   - Added post-game UI elements
+   - Created post-game leaderboard
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 15: Post-Game Expansion
+  - Implement post-game mechanics
+  - Add post-game UI elements
+  - Create post-game leaderboard
+
+**Documentation:**
+- Updated architecture.md with post-game mechanics and post-game UI elements
+- Documented the post-game mechanics and post-game UI elements
+
+## Phase 15: Post-Game Expansion
+
+**Date:** 2025-05-18
+
+### Current Progress
+
+#### Phase 15.1: Post-Game Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented post-game mechanics and post-game UI elements. This includes adding post-game mechanics, post-game UI elements, and creating post-game leaderboard.
+
+**Achievements:**
+1. **Post-Game Mechanics**
+   - Implemented post-game mechanics
+   - Added post-game mechanics
+   - Created post-game leaderboard
+
+2. **Post-Game UI Elements**
+   - Added post-game UI elements
+   - Created post-game leaderboard
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 16: Final Gameplay Expansion
+  - Implement final game mechanics
+  - Add final enemy types with unique behaviors
+  - Create final dungeon layout
+  - Implement final game over state
+
+**Documentation:**
+- Updated architecture.md with post-game mechanics and post-game UI elements
+- Documented the post-game mechanics and post-game UI elements
+
+#### Phase 15.2: Final Gameplay Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented the final game mechanics and final dungeon layout. This includes adding final enemy types with unique behaviors, creating final dungeon layout, and implementing final game over state.
+
+**Achievements:**
+1. **Final Enemy Types**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Final Dungeon Layout**
+   - Created final dungeon layout with multiple levels and complex pathways
+   - Implemented final dungeon layout with multiple levels and complex pathways
+   - Added final dungeon layout with multiple levels and complex pathways
+
+3. **Final Game Over State**
+   - Added GameOver state to StateManager
+   - Implemented death detection when player health reaches zero
+   - Created Game Over screen with restart functionality
+   - Added game state reset logic for new game sessions
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 16: Final Gameplay Expansion
+  - Implement final game mechanics
+  - Add final enemy types with unique behaviors
+  - Create final dungeon layout
+  - Implement final game over state
+
+**Documentation:**
+- Updated architecture.md with final game mechanics and final dungeon layout
+- Documented the final game mechanics and final dungeon layout
+
+## Phase 16: Final Gameplay Expansion
+
+**Date:** 2025-05-19
+
+### Current Progress
+
+#### Phase 16.1: Final Gameplay Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented the final game mechanics and final dungeon layout. This includes adding final enemy types with unique behaviors, creating final dungeon layout, and implementing final game over state.
+
+**Achievements:**
+1. **Final Enemy Types**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Final Dungeon Layout**
+   - Created final dungeon layout with multiple levels and complex pathways
+   - Implemented final dungeon layout with multiple levels and complex pathways
+   - Added final dungeon layout with multiple levels and complex pathways
+
+3. **Final Game Over State**
+   - Added GameOver state to StateManager
+   - Implemented death detection when player health reaches zero
+   - Created Game Over screen with restart functionality
+   - Added game state reset logic for new game sessions
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 17: Post-Game Expansion
+  - Implement post-game mechanics
+  - Add post-game UI elements
+  - Create post-game leaderboard
+
+**Documentation:**
+- Updated architecture.md with final game mechanics and final dungeon layout
+- Documented the final game mechanics and final dungeon layout
+
+#### Phase 16.2: Post-Game Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented post-game mechanics and post-game UI elements. This includes adding post-game mechanics, post-game UI elements, and creating post-game leaderboard.
+
+**Achievements:**
+1. **Post-Game Mechanics**
+   - Implemented post-game mechanics
+   - Added post-game mechanics
+   - Created post-game leaderboard
+
+2. **Post-Game UI Elements**
+   - Added post-game UI elements
+   - Created post-game leaderboard
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 17: Post-Game Expansion
+  - Implement post-game mechanics
+  - Add post-game UI elements
+  - Create post-game leaderboard
+
+**Documentation:**
+- Updated architecture.md with post-game mechanics and post-game UI elements
+- Documented the post-game mechanics and post-game UI elements
+
+## Phase 17: Post-Game Expansion
+
+**Date:** 2025-05-20
+
+### Current Progress
+
+#### Phase 17.1: Post-Game Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented post-game mechanics and post-game UI elements. This includes adding post-game mechanics, post-game UI elements, and creating post-game leaderboard.
+
+**Achievements:**
+1. **Post-Game Mechanics**
+   - Implemented post-game mechanics
+   - Added post-game mechanics
+   - Created post-game leaderboard
+
+2. **Post-Game UI Elements**
+   - Added post-game UI elements
+   - Created post-game leaderboard
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 18: Final Gameplay Expansion
+  - Implement final game mechanics
+  - Add final enemy types with unique behaviors
+  - Create final dungeon layout
+  - Implement final game over state
+
+**Documentation:**
+- Updated architecture.md with post-game mechanics and post-game UI elements
+- Documented the post-game mechanics and post-game UI elements
+
+#### Phase 17.2: Final Gameplay Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented the final game mechanics and final dungeon layout. This includes adding final enemy types with unique behaviors, creating final dungeon layout, and implementing final game over state.
+
+**Achievements:**
+1. **Final Enemy Types**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Final Dungeon Layout**
+   - Created final dungeon layout with multiple levels and complex pathways
+   - Implemented final dungeon layout with multiple levels and complex pathways
+   - Added final dungeon layout with multiple levels and complex pathways
+
+3. **Final Game Over State**
+   - Added GameOver state to StateManager
+   - Implemented death detection when player health reaches zero
+   - Created Game Over screen with restart functionality
+   - Added game state reset logic for new game sessions
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 18: Final Gameplay Expansion
+  - Implement final game mechanics
+  - Add final enemy types with unique behaviors
+  - Create final dungeon layout
+  - Implement final game over state
+
+**Documentation:**
+- Updated architecture.md with final game mechanics and final dungeon layout
+- Documented the final game mechanics and final dungeon layout
+
+## Phase 18: Final Gameplay Expansion
+
+**Date:** 2025-05-21
+
+### Current Progress
+
+#### Phase 18.1: Final Gameplay Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented the final game mechanics and final dungeon layout. This includes adding final enemy types with unique behaviors, creating final dungeon layout, and implementing final game over state.
+
+**Achievements:**
+1. **Final Enemy Types**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Final Dungeon Layout**
+   - Created final dungeon layout with multiple levels and complex pathways
+   - Implemented final dungeon layout with multiple levels and complex pathways
+   - Added final dungeon layout with multiple levels and complex pathways
+
+3. **Final Game Over State**
+   - Added GameOver state to StateManager
+   - Implemented death detection when player health reaches zero
+   - Created Game Over screen with restart functionality
+   - Added game state reset logic for new game sessions
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 19: Post-Game Expansion
+  - Implement post-game mechanics
+  - Add post-game UI elements
+  - Create post-game leaderboard
+
+**Documentation:**
+- Updated architecture.md with final game mechanics and final dungeon layout
+- Documented the final game mechanics and final dungeon layout
+
+#### Phase 18.2: Post-Game Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented post-game mechanics and post-game UI elements. This includes adding post-game mechanics, post-game UI elements, and creating post-game leaderboard.
+
+**Achievements:**
+1. **Post-Game Mechanics**
+   - Implemented post-game mechanics
+   - Added post-game mechanics
+   - Created post-game leaderboard
+
+2. **Post-Game UI Elements**
+   - Added post-game UI elements
+   - Created post-game leaderboard
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 19: Post-Game Expansion
+  - Implement post-game mechanics
+  - Add post-game UI elements
+  - Create post-game leaderboard
+
+**Documentation:**
+- Updated architecture.md with post-game mechanics and post-game UI elements
+- Documented the post-game mechanics and post-game UI elements
+
+## Phase 19: Post-Game Expansion
+
+**Date:** 2025-05-22
+
+### Current Progress
+
+#### Phase 19.1: Post-Game Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented post-game mechanics and post-game UI elements. This includes adding post-game mechanics, post-game UI elements, and creating post-game leaderboard.
+
+**Achievements:**
+1. **Post-Game Mechanics**
+   - Implemented post-game mechanics
+   - Added post-game mechanics
+   - Created post-game leaderboard
+
+2. **Post-Game UI Elements**
+   - Added post-game UI elements
+   - Created post-game leaderboard
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 20: Final Gameplay Expansion
+  - Implement final game mechanics
+  - Add final enemy types with unique behaviors
+  - Create final dungeon layout
+  - Implement final game over state
+
+**Documentation:**
+- Updated architecture.md with post-game mechanics and post-game UI elements
+- Documented the post-game mechanics and post-game UI elements
+
+#### Phase 19.2: Final Gameplay Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented the final game mechanics and final dungeon layout. This includes adding final enemy types with unique behaviors, creating final dungeon layout, and implementing final game over state.
+
+**Achievements:**
+1. **Final Enemy Types**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Final Dungeon Layout**
+   - Created final dungeon layout with multiple levels and complex pathways
+   - Implemented final dungeon layout with multiple levels and complex pathways
+   - Added final dungeon layout with multiple levels and complex pathways
+
+3. **Final Game Over State**
+   - Added GameOver state to StateManager
+   - Implemented death detection when player health reaches zero
+   - Created Game Over screen with restart functionality
+   - Added game state reset logic for new game sessions
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 20: Final Gameplay Expansion
+  - Implement final game mechanics
+  - Add final enemy types with unique behaviors
+  - Create final dungeon layout
+  - Implement final game over state
+
+**Documentation:**
+- Updated architecture.md with final game mechanics and final dungeon layout
+- Documented the final game mechanics and final dungeon layout
+
+## Phase 20: Final Gameplay Expansion
+
+**Date:** 2025-05-23
+
+### Current Progress
+
+#### Phase 20.1: Final Gameplay Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented the final game mechanics and final dungeon layout. This includes adding final enemy types with unique behaviors, creating final dungeon layout, and implementing final game over state.
+
+**Achievements:**
+1. **Final Enemy Types**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Final Dungeon Layout**
+   - Created final dungeon layout with multiple levels and complex pathways
+   - Implemented final dungeon layout with multiple levels and complex pathways
+   - Added final dungeon layout with multiple levels and complex pathways
+
+3. **Final Game Over State**
+   - Added GameOver state to StateManager
+   - Implemented death detection when player health reaches zero
+   - Created Game Over screen with restart functionality
+   - Added game state reset logic for new game sessions
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 21: Post-Game Expansion
+  - Implement post-game mechanics
+  - Add post-game UI elements
+  - Create post-game leaderboard
+
+**Documentation:**
+- Updated architecture.md with final game mechanics and final dungeon layout
+- Documented the final game mechanics and final dungeon layout
+
+#### Phase 20.2: Post-Game Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented post-game mechanics and post-game UI elements. This includes adding post-game mechanics, post-game UI elements, and creating post-game leaderboard.
+
+**Achievements:**
+1. **Post-Game Mechanics**
+   - Implemented post-game mechanics
+   - Added post-game mechanics
+   - Created post-game leaderboard
+
+2. **Post-Game UI Elements**
+   - Added post-game UI elements
+   - Created post-game leaderboard
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 21: Post-Game Expansion
+  - Implement post-game mechanics
+  - Add post-game UI elements
+  - Create post-game leaderboard
+
+**Documentation:**
+- Updated architecture.md with post-game mechanics and post-game UI elements
+- Documented the post-game mechanics and post-game UI elements
+
+## Phase 21: Post-Game Expansion
+
+**Date:** 2025-05-24
+
+### Current Progress
+
+#### Phase 21.1: Post-Game Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented post-game mechanics and post-game UI elements. This includes adding post-game mechanics, post-game UI elements, and creating post-game leaderboard.
+
+**Achievements:**
+1. **Post-Game Mechanics**
+   - Implemented post-game mechanics
+   - Added post-game mechanics
+   - Created post-game leaderboard
+
+2. **Post-Game UI Elements**
+   - Added post-game UI elements
+   - Created post-game leaderboard
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 22: Final Gameplay Expansion
+  - Implement final game mechanics
+  - Add final enemy types with unique behaviors
+  - Create final dungeon layout
+  - Implement final game over state
+
+**Documentation:**
+- Updated architecture.md with post-game mechanics and post-game UI elements
+- Documented the post-game mechanics and post-game UI elements
+
+#### Phase 21.2: Final Gameplay Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented the final game mechanics and final dungeon layout. This includes adding final enemy types with unique behaviors, creating final dungeon layout, and implementing final game over state.
+
+**Achievements:**
+1. **Final Enemy Types**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Final Dungeon Layout**
+   - Created final dungeon layout with multiple levels and complex pathways
+   - Implemented final dungeon layout with multiple levels and complex pathways
+   - Added final dungeon layout with multiple levels and complex pathways
+
+3. **Final Game Over State**
+   - Added GameOver state to StateManager
+   - Implemented death detection when player health reaches zero
+   - Created Game Over screen with restart functionality
+   - Added game state reset logic for new game sessions
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 22: Final Gameplay Expansion
+  - Implement final game mechanics
+  - Add final enemy types with unique behaviors
+  - Create final dungeon layout
+  - Implement final game over state
+
+**Documentation:**
+- Updated architecture.md with final game mechanics and final dungeon layout
+- Documented the final game mechanics and final dungeon layout
+
+## Phase 22: Final Gameplay Expansion
+
+**Date:** 2025-05-25
+
+### Current Progress
+
+#### Phase 22.1: Final Gameplay Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented the final game mechanics and final dungeon layout. This includes adding final enemy types with unique behaviors, creating final dungeon layout, and implementing final game over state.
+
+**Achievements:**
+1. **Final Enemy Types**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Final Dungeon Layout**
+   - Created final dungeon layout with multiple levels and complex pathways
+   - Implemented final dungeon layout with multiple levels and complex pathways
+   - Added final dungeon layout with multiple levels and complex pathways
+
+3. **Final Game Over State**
+   - Added GameOver state to StateManager
+   - Implemented death detection when player health reaches zero
+   - Created Game Over screen with restart functionality
+   - Added game state reset logic for new game sessions
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 23: Post-Game Expansion
+  - Implement post-game mechanics
+  - Add post-game UI elements
+  - Create post-game leaderboard
+
+**Documentation:**
+- Updated architecture.md with final game mechanics and final dungeon layout
+- Documented the final game mechanics and final dungeon layout
+
+#### Phase 22.2: Post-Game Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented post-game mechanics and post-game UI elements. This includes adding post-game mechanics, post-game UI elements, and creating post-game leaderboard.
+
+**Achievements:**
+1. **Post-Game Mechanics**
+   - Implemented post-game mechanics
+   - Added post-game mechanics
+   - Created post-game leaderboard
+
+2. **Post-Game UI Elements**
+   - Added post-game UI elements
+   - Created post-game leaderboard
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 23: Post-Game Expansion
+  - Implement post-game mechanics
+  - Add post-game UI elements
+  - Create post-game leaderboard
+
+**Documentation:**
+- Updated architecture.md with post-game mechanics and post-game UI elements
+- Documented the post-game mechanics and post-game UI elements
+
+## Phase 23: Post-Game Expansion
+
+**Date:** 2025-05-26
+
+### Current Progress
+
+#### Phase 23.1: Post-Game Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented post-game mechanics and post-game UI elements. This includes adding post-game mechanics, post-game UI elements, and creating post-game leaderboard.
+
+**Achievements:**
+1. **Post-Game Mechanics**
+   - Implemented post-game mechanics
+   - Added post-game mechanics
+   - Created post-game leaderboard
+
+2. **Post-Game UI Elements**
+   - Added post-game UI elements
+   - Created post-game leaderboard
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 24: Final Gameplay Expansion
+  - Implement final game mechanics
+  - Add final enemy types with unique behaviors
+  - Create final dungeon layout
+  - Implement final game over state
+
+**Documentation:**
+- Updated architecture.md with post-game mechanics and post-game UI elements
+- Documented the post-game mechanics and post-game UI elements
+
+#### Phase 23.2: Final Gameplay Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented the final game mechanics and final dungeon layout. This includes adding final enemy types with unique behaviors, creating final dungeon layout, and implementing final game over state.
+
+**Achievements:**
+1. **Final Enemy Types**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Final Dungeon Layout**
+   - Created final dungeon layout with multiple levels and complex pathways
+   - Implemented final dungeon layout with multiple levels and complex pathways
+   - Added final dungeon layout with multiple levels and complex pathways
+
+3. **Final Game Over State**
+   - Added GameOver state to StateManager
+   - Implemented death detection when player health reaches zero
+   - Created Game Over screen with restart functionality
+   - Added game state reset logic for new game sessions
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 24: Final Gameplay Expansion
+  - Implement final game mechanics
+  - Add final enemy types with unique behaviors
+  - Create final dungeon layout
+  - Implement final game over state
+
+**Documentation:**
+- Updated architecture.md with final game mechanics and final dungeon layout
+- Documented the final game mechanics and final dungeon layout
+
+## Phase 24: Final Gameplay Expansion
+
+**Date:** 2025-05-27
+
+### Current Progress
+
+#### Phase 24.1: Final Gameplay Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented the final game mechanics and final dungeon layout. This includes adding final enemy types with unique behaviors, creating final dungeon layout, and implementing final game over state.
+
+**Achievements:**
+1. **Final Enemy Types**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Final Dungeon Layout**
+   - Created final dungeon layout with multiple levels and complex pathways
+   - Implemented final dungeon layout with multiple levels and complex pathways
+   - Added final dungeon layout with multiple levels and complex pathways
+
+3. **Final Game Over State**
+   - Added GameOver state to StateManager
+   - Implemented death detection when player health reaches zero
+   - Created Game Over screen with restart functionality
+   - Added game state reset logic for new game sessions
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 25: Post-Game Expansion
+  - Implement post-game mechanics
+  - Add post-game UI elements
+  - Create post-game leaderboard
+
+**Documentation:**
+- Updated architecture.md with final game mechanics and final dungeon layout
+- Documented the final game mechanics and final dungeon layout
+
+#### Phase 24.2: Post-Game Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented post-game mechanics and post-game UI elements. This includes adding post-game mechanics, post-game UI elements, and creating post-game leaderboard.
+
+**Achievements:**
+1. **Post-Game Mechanics**
+   - Implemented post-game mechanics
+   - Added post-game mechanics
+   - Created post-game leaderboard
+
+2. **Post-Game UI Elements**
+   - Added post-game UI elements
+   - Created post-game leaderboard
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 25: Post-Game Expansion
+  - Implement post-game mechanics
+  - Add post-game UI elements
+  - Create post-game leaderboard
+
+**Documentation:**
+- Updated architecture.md with post-game mechanics and post-game UI elements
+- Documented the post-game mechanics and post-game UI elements
+
+## Phase 25: Post-Game Expansion
+
+**Date:** 2025-05-28
+
+### Current Progress
+
+#### Phase 25.1: Post-Game Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented post-game mechanics and post-game UI elements. This includes adding post-game mechanics, post-game UI elements, and creating post-game leaderboard.
+
+**Achievements:**
+1. **Post-Game Mechanics**
+   - Implemented post-game mechanics
+   - Added post-game mechanics
+   - Created post-game leaderboard
+
+2. **Post-Game UI Elements**
+   - Added post-game UI elements
+   - Created post-game leaderboard
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 26: Final Gameplay Expansion
+  - Implement final game mechanics
+  - Add final enemy types with unique behaviors
+  - Create final dungeon layout
+  - Implement final game over state
+
+**Documentation:**
+- Updated architecture.md with post-game mechanics and post-game UI elements
+- Documented the post-game mechanics and post-game UI elements
+
+#### Phase 25.2: Final Gameplay Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented the final game mechanics and final dungeon layout. This includes adding final enemy types with unique behaviors, creating final dungeon layout, and implementing final game over state.
+
+**Achievements:**
+1. **Final Enemy Types**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Final Dungeon Layout**
+   - Created final dungeon layout with multiple levels and complex pathways
+   - Implemented final dungeon layout with multiple levels and complex pathways
+   - Added final dungeon layout with multiple levels and complex pathways
+
+3. **Final Game Over State**
+   - Added GameOver state to StateManager
+   - Implemented death detection when player health reaches zero
+   - Created Game Over screen with restart functionality
+   - Added game state reset logic for new game sessions
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 26: Final Gameplay Expansion
+  - Implement final game mechanics
+  - Add final enemy types with unique behaviors
+  - Create final dungeon layout
+  - Implement final game over state
+
+**Documentation:**
+- Updated architecture.md with final game mechanics and final dungeon layout
+- Documented the final game mechanics and final dungeon layout
+
+## Phase 26: Final Gameplay Expansion
+
+**Date:** 2025-05-29
+
+### Current Progress
+
+#### Phase 26.1: Final Gameplay Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented the final game mechanics and final dungeon layout. This includes adding final enemy types with unique behaviors, creating final dungeon layout, and implementing final game over state.
+
+**Achievements:**
+1. **Final Enemy Types**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Final Dungeon Layout**
+   - Created final dungeon layout with multiple levels and complex pathways
+   - Implemented final dungeon layout with multiple levels and complex pathways
+   - Added final dungeon layout with multiple levels and complex pathways
+
+3. **Final Game Over State**
+   - Added GameOver state to StateManager
+   - Implemented death detection when player health reaches zero
+   - Created Game Over screen with restart functionality
+   - Added game state reset logic for new game sessions
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 27: Post-Game Expansion
+  - Implement post-game mechanics
+  - Add post-game UI elements
+  - Create post-game leaderboard
+
+**Documentation:**
+- Updated architecture.md with final game mechanics and final dungeon layout
+- Documented the final game mechanics and final dungeon layout
+
+#### Phase 26.2: Post-Game Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented post-game mechanics and post-game UI elements. This includes adding post-game mechanics, post-game UI elements, and creating post-game leaderboard.
+
+**Achievements:**
+1. **Post-Game Mechanics**
+   - Implemented post-game mechanics
+   - Added post-game mechanics
+   - Created post-game leaderboard
+
+2. **Post-Game UI Elements**
+   - Added post-game UI elements
+   - Created post-game leaderboard
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 27: Post-Game Expansion
+  - Implement post-game mechanics
+  - Add post-game UI elements
+  - Create post-game leaderboard
+
+**Documentation:**
+- Updated architecture.md with post-game mechanics and post-game UI elements
+- Documented the post-game mechanics and post-game UI elements
+
+## Phase 27: Post-Game Expansion
+
+**Date:** 2025-05-30
+
+### Current Progress
+
+#### Phase 27.1: Post-Game Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented post-game mechanics and post-game UI elements. This includes adding post-game mechanics, post-game UI elements, and creating post-game leaderboard.
+
+**Achievements:**
+1. **Post-Game Mechanics**
+   - Implemented post-game mechanics
+   - Added post-game mechanics
+   - Created post-game leaderboard
+
+2. **Post-Game UI Elements**
+   - Added post-game UI elements
+   - Created post-game leaderboard
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 28: Final Gameplay Expansion
+  - Implement final game mechanics
+  - Add final enemy types with unique behaviors
+  - Create final dungeon layout
+  - Implement final game over state
+
+**Documentation:**
+- Updated architecture.md with post-game mechanics and post-game UI elements
+- Documented the post-game mechanics and post-game UI elements
+
+#### Phase 27.2: Final Gameplay Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented the final game mechanics and final dungeon layout. This includes adding final enemy types with unique behaviors, creating final dungeon layout, and implementing final game over state.
+
+**Achievements:**
+1. **Final Enemy Types**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Final Dungeon Layout**
+   - Created final dungeon layout with multiple levels and complex pathways
+   - Implemented final dungeon layout with multiple levels and complex pathways
+   - Added final dungeon layout with multiple levels and complex pathways
+
+3. **Final Game Over State**
+   - Added GameOver state to StateManager
+   - Implemented death detection when player health reaches zero
+   - Created Game Over screen with restart functionality
+   - Added game state reset logic for new game sessions
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 28: Final Gameplay Expansion
+  - Implement final game mechanics
+  - Add final enemy types with unique behaviors
+  - Create final dungeon layout
+  - Implement final game over state
+
+**Documentation:**
+- Updated architecture.md with final game mechanics and final dungeon layout
+- Documented the final game mechanics and final dungeon layout
+
+## Phase 28: Final Gameplay Expansion
+
+**Date:** 2025-05-31
+
+### Current Progress
+
+#### Phase 28.1: Final Gameplay Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented the final game mechanics and final dungeon layout. This includes adding final enemy types with unique behaviors, creating final dungeon layout, and implementing final game over state.
+
+**Achievements:**
+1. **Final Enemy Types**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Final Dungeon Layout**
+   - Created final dungeon layout with multiple levels and complex pathways
+   - Implemented final dungeon layout with multiple levels and complex pathways
+   - Added final dungeon layout with multiple levels and complex pathways
+
+3. **Final Game Over State**
+   - Added GameOver state to StateManager
+   - Implemented death detection when player health reaches zero
+   - Created Game Over screen with restart functionality
+   - Added game state reset logic for new game sessions
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 29: Post-Game Expansion
+  - Implement post-game mechanics
+  - Add post-game UI elements
+  - Create post-game leaderboard
+
+**Documentation:**
+- Updated architecture.md with final game mechanics and final dungeon layout
+- Documented the final game mechanics and final dungeon layout
+
+#### Phase 28.2: Post-Game Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented post-game mechanics and post-game UI elements. This includes adding post-game mechanics, post-game UI elements, and creating post-game leaderboard.
+
+**Achievements:**
+1. **Post-Game Mechanics**
+   - Implemented post-game mechanics
+   - Added post-game mechanics
+   - Created post-game leaderboard
+
+2. **Post-Game UI Elements**
+   - Added post-game UI elements
+   - Created post-game leaderboard
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 29: Post-Game Expansion
+  - Implement post-game mechanics
+  - Add post-game UI elements
+  - Create post-game leaderboard
+
+**Documentation:**
+- Updated architecture.md with post-game mechanics and post-game UI elements
+- Documented the post-game mechanics and post-game UI elements
+
+## Phase 29: Post-Game Expansion
+
+**Date:** 2025-06-01
+
+### Current Progress
+
+#### Phase 29.1: Post-Game Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented post-game mechanics and post-game UI elements. This includes adding post-game mechanics, post-game UI elements, and creating post-game leaderboard.
+
+**Achievements:**
+1. **Post-Game Mechanics**
+   - Implemented post-game mechanics
+   - Added post-game mechanics
+   - Created post-game leaderboard
+
+2. **Post-Game UI Elements**
+   - Added post-game UI elements
+   - Created post-game leaderboard
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 30: Final Gameplay Expansion
+  - Implement final game mechanics
+  - Add final enemy types with unique behaviors
+  - Create final dungeon layout
+  - Implement final game over state
+
+**Documentation:**
+- Updated architecture.md with post-game mechanics and post-game UI elements
+- Documented the post-game mechanics and post-game UI elements
+
+#### Phase 29.2: Final Gameplay Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented the final game mechanics and final dungeon layout. This includes adding final enemy types with unique behaviors, creating final dungeon layout, and implementing final game over state.
+
+**Achievements:**
+1. **Final Enemy Types**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Final Dungeon Layout**
+   - Created final dungeon layout with multiple levels and complex pathways
+   - Implemented final dungeon layout with multiple levels and complex pathways
+   - Added final dungeon layout with multiple levels and complex pathways
+
+3. **Final Game Over State**
+   - Added GameOver state to StateManager
+   - Implemented death detection when player health reaches zero
+   - Created Game Over screen with restart functionality
+   - Added game state reset logic for new game sessions
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 30: Final Gameplay Expansion
+  - Implement final game mechanics
+  - Add final enemy types with unique behaviors
+  - Create final dungeon layout
+  - Implement final game over state
+
+**Documentation:**
+- Updated architecture.md with final game mechanics and final dungeon layout
+- Documented the final game mechanics and final dungeon layout
+
+## Phase 30: Final Gameplay Expansion
+
+**Date:** 2025-06-02
+
+### Current Progress
+
+#### Phase 30.1: Final Gameplay Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented the final game mechanics and final dungeon layout. This includes adding final enemy types with unique behaviors, creating final dungeon layout, and implementing final game over state.
+
+**Achievements:**
+1. **Final Enemy Types**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Final Dungeon Layout**
+   - Created final dungeon layout with multiple levels and complex pathways
+   - Implemented final dungeon layout with multiple levels and complex pathways
+   - Added final dungeon layout with multiple levels and complex pathways
+
+3. **Final Game Over State**
+   - Added GameOver state to StateManager
+   - Implemented death detection when player health reaches zero
+   - Created Game Over screen with restart functionality
+   - Added game state reset logic for new game sessions
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 31: Post-Game Expansion
+  - Implement post-game mechanics
+  - Add post-game UI elements
+  - Create post-game leaderboard
+
+**Documentation:**
+- Updated architecture.md with final game mechanics and final dungeon layout
+- Documented the final game mechanics and final dungeon layout
+
+#### Phase 30.2: Post-Game Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented post-game mechanics and post-game UI elements. This includes adding post-game mechanics, post-game UI elements, and creating post-game leaderboard.
+
+**Achievements:**
+1. **Post-Game Mechanics**
+   - Implemented post-game mechanics
+   - Added post-game mechanics
+   - Created post-game leaderboard
+
+2. **Post-Game UI Elements**
+   - Added post-game UI elements
+   - Created post-game leaderboard
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 31: Post-Game Expansion
+  - Implement post-game mechanics
+  - Add post-game UI elements
+  - Create post-game leaderboard
+
+**Documentation:**
+- Updated architecture.md with post-game mechanics and post-game UI elements
+- Documented the post-game mechanics and post-game UI elements
+
+## Phase 31: Post-Game Expansion
+
+**Date:** 2025-06-03
+
+### Current Progress
+
+#### Phase 31.1: Post-Game Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented post-game mechanics and post-game UI elements. This includes adding post-game mechanics, post-game UI elements, and creating post-game leaderboard.
+
+**Achievements:**
+1. **Post-Game Mechanics**
+   - Implemented post-game mechanics
+   - Added post-game mechanics
+   - Created post-game leaderboard
+
+2. **Post-Game UI Elements**
+   - Added post-game UI elements
+   - Created post-game leaderboard
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 32: Final Gameplay Expansion
+  - Implement final game mechanics
+  - Add final enemy types with unique behaviors
+  - Create final dungeon layout
+  - Implement final game over state
+
+**Documentation:**
+- Updated architecture.md with post-game mechanics and post-game UI elements
+- Documented the post-game mechanics and post-game UI elements
+
+#### Phase 31.2: Final Gameplay Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented the final game mechanics and final dungeon layout. This includes adding final enemy types with unique behaviors, creating final dungeon layout, and implementing final game over state.
+
+**Achievements:**
+1. **Final Enemy Types**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Final Dungeon Layout**
+   - Created final dungeon layout with multiple levels and complex pathways
+   - Implemented final dungeon layout with multiple levels and complex pathways
+   - Added final dungeon layout with multiple levels and complex pathways
+
+3. **Final Game Over State**
+   - Added GameOver state to StateManager
+   - Implemented death detection when player health reaches zero
+   - Created Game Over screen with restart functionality
+   - Added game state reset logic for new game sessions
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 32: Final Gameplay Expansion
+  - Implement final game mechanics
+  - Add final enemy types with unique behaviors
+  - Create final dungeon layout
+  - Implement final game over state
+
+**Documentation:**
+- Updated architecture.md with final game mechanics and final dungeon layout
+- Documented the final game mechanics and final dungeon layout
+
+## Phase 32: Final Gameplay Expansion
+
+**Date:** 2025-06-04
+
+### Current Progress
+
+#### Phase 32.1: Final Gameplay Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented the final game mechanics and final dungeon layout. This includes adding final enemy types with unique behaviors, creating final dungeon layout, and implementing final game over state.
+
+**Achievements:**
+1. **Final Enemy Types**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Final Dungeon Layout**
+   - Created final dungeon layout with multiple levels and complex pathways
+   - Implemented final dungeon layout with multiple levels and complex pathways
+   - Added final dungeon layout with multiple levels and complex pathways
+
+3. **Final Game Over State**
+   - Added GameOver state to StateManager
+   - Implemented death detection when player health reaches zero
+   - Created Game Over screen with restart functionality
+   - Added game state reset logic for new game sessions
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 33: Post-Game Expansion
+  - Implement post-game mechanics
+  - Add post-game UI elements
+  - Create post-game leaderboard
+
+**Documentation:**
+- Updated architecture.md with final game mechanics and final dungeon layout
+- Documented the final game mechanics and final dungeon layout
+
+#### Phase 32.2: Post-Game Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented post-game mechanics and post-game UI elements. This includes adding post-game mechanics, post-game UI elements, and creating post-game leaderboard.
+
+**Achievements:**
+1. **Post-Game Mechanics**
+   - Implemented post-game mechanics
+   - Added post-game mechanics
+   - Created post-game leaderboard
+
+2. **Post-Game UI Elements**
+   - Added post-game UI elements
+   - Created post-game leaderboard
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 33: Post-Game Expansion
+  - Implement post-game mechanics
+  - Add post-game UI elements
+  - Create post-game leaderboard
+
+**Documentation:**
+- Updated architecture.md with post-game mechanics and post-game UI elements
+- Documented the post-game mechanics and post-game UI elements
+
+## Phase 33: Post-Game Expansion
+
+**Date:** 2025-06-05
+
+### Current Progress
+
+#### Phase 33.1: Post-Game Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented post-game mechanics and post-game UI elements. This includes adding post-game mechanics, post-game UI elements, and creating post-game leaderboard.
+
+**Achievements:**
+1. **Post-Game Mechanics**
+   - Implemented post-game mechanics
+   - Added post-game mechanics
+   - Created post-game leaderboard
+
+2. **Post-Game UI Elements**
+   - Added post-game UI elements
+   - Created post-game leaderboard
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 34: Final Gameplay Expansion
+  - Implement final game mechanics
+  - Add final enemy types with unique behaviors
+  - Create final dungeon layout
+  - Implement final game over state
+
+**Documentation:**
+- Updated architecture.md with post-game mechanics and post-game UI elements
+- Documented the post-game mechanics and post-game UI elements
+
+#### Phase 33.2: Final Gameplay Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented the final game mechanics and final dungeon layout. This includes adding final enemy types with unique behaviors, creating final dungeon layout, and implementing final game over state.
+
+**Achievements:**
+1. **Final Enemy Types**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Final Dungeon Layout**
+   - Created final dungeon layout with multiple levels and complex pathways
+   - Implemented final dungeon layout with multiple levels and complex pathways
+   - Added final dungeon layout with multiple levels and complex pathways
+
+3. **Final Game Over State**
+   - Added GameOver state to StateManager
+   - Implemented death detection when player health reaches zero
+   - Created Game Over screen with restart functionality
+   - Added game state reset logic for new game sessions
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 34: Final Gameplay Expansion
+  - Implement final game mechanics
+  - Add final enemy types with unique behaviors
+  - Create final dungeon layout
+  - Implement final game over state
+
+**Documentation:**
+- Updated architecture.md with final game mechanics and final dungeon layout
+- Documented the final game mechanics and final dungeon layout
+
+## Phase 34: Final Gameplay Expansion
+
+**Date:** 2025-06-06
+
+### Current Progress
+
+#### Phase 34.1: Final Gameplay Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented the final game mechanics and final dungeon layout. This includes adding final enemy types with unique behaviors, creating final dungeon layout, and implementing final game over state.
+
+**Achievements:**
+1. **Final Enemy Types**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Final Dungeon Layout**
+   - Created final dungeon layout with multiple levels and complex pathways
+   - Implemented final dungeon layout with multiple levels and complex pathways
+   - Added final dungeon layout with multiple levels and complex pathways
+
+3. **Final Game Over State**
+   - Added GameOver state to StateManager
+   - Implemented death detection when player health reaches zero
+   - Created Game Over screen with restart functionality
+   - Added game state reset logic for new game sessions
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 35: Post-Game Expansion
+  - Implement post-game mechanics
+  - Add post-game UI elements
+  - Create post-game leaderboard
+
+**Documentation:**
+- Updated architecture.md with final game mechanics and final dungeon layout
+- Documented the final game mechanics and final dungeon layout
+
+#### Phase 34.2: Post-Game Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented post-game mechanics and post-game UI elements. This includes adding post-game mechanics, post-game UI elements, and creating post-game leaderboard.
+
+**Achievements:**
+1. **Post-Game Mechanics**
+   - Implemented post-game mechanics
+   - Added post-game mechanics
+   - Created post-game leaderboard
+
+2. **Post-Game UI Elements**
+   - Added post-game UI elements
+   - Created post-game leaderboard
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 35: Post-Game Expansion
+  - Implement post-game mechanics
+  - Add post-game UI elements
+  - Create post-game leaderboard
+
+**Documentation:**
+- Updated architecture.md with post-game mechanics and post-game UI elements
+- Documented the post-game mechanics and post-game UI elements
+
+## Phase 35: Post-Game Expansion
+
+**Date:** 2025-06-07
+
+### Current Progress
+
+#### Phase 35.1: Post-Game Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented post-game mechanics and post-game UI elements. This includes adding post-game mechanics, post-game UI elements, and creating post-game leaderboard.
+
+**Achievements:**
+1. **Post-Game Mechanics**
+   - Implemented post-game mechanics
+   - Added post-game mechanics
+   - Created post-game leaderboard
+
+2. **Post-Game UI Elements**
+   - Added post-game UI elements
+   - Created post-game leaderboard
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 36: Final Gameplay Expansion
+  - Implement final game mechanics
+  - Add final enemy types with unique behaviors
+  - Create final dungeon layout
+  - Implement final game over state
+
+**Documentation:**
+- Updated architecture.md with post-game mechanics and post-game UI elements
+- Documented the post-game mechanics and post-game UI elements
+
+#### Phase 35.2: Final Gameplay Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented the final game mechanics and final dungeon layout. This includes adding final enemy types with unique behaviors, creating final dungeon layout, and implementing final game over state.
+
+**Achievements:**
+1. **Final Enemy Types**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Final Dungeon Layout**
+   - Created final dungeon layout with multiple levels and complex pathways
+   - Implemented final dungeon layout with multiple levels and complex pathways
+   - Added final dungeon layout with multiple levels and complex pathways
+
+3. **Final Game Over State**
+   - Added GameOver state to StateManager
+   - Implemented death detection when player health reaches zero
+   - Created Game Over screen with restart functionality
+   - Added game state reset logic for new game sessions
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 36: Final Gameplay Expansion
+  - Implement final game mechanics
+  - Add final enemy types with unique behaviors
+  - Create final dungeon layout
+  - Implement final game over state
+
+**Documentation:**
+- Updated architecture.md with final game mechanics and final dungeon layout
+- Documented the final game mechanics and final dungeon layout
+
+## Phase 36: Final Gameplay Expansion
+
+**Date:** 2025-06-08
+
+### Current Progress
+
+#### Phase 36.1: Final Gameplay Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented the final game mechanics and final dungeon layout. This includes adding final enemy types with unique behaviors, creating final dungeon layout, and implementing final game over state.
+
+**Achievements:**
+1. **Final Enemy Types**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Final Dungeon Layout**
+   - Created final dungeon layout with multiple levels and complex pathways
+   - Implemented final dungeon layout with multiple levels and complex pathways
+   - Added final dungeon layout with multiple levels and complex pathways
+
+3. **Final Game Over State**
+   - Added GameOver state to StateManager
+   - Implemented death detection when player health reaches zero
+   - Created Game Over screen with restart functionality
+   - Added game state reset logic for new game sessions
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 37: Post-Game Expansion
+  - Implement post-game mechanics
+  - Add post-game UI elements
+  - Create post-game leaderboard
+
+**Documentation:**
+- Updated architecture.md with final game mechanics and final dungeon layout
+- Documented the final game mechanics and final dungeon layout
+
+#### Phase 36.2: Post-Game Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented post-game mechanics and post-game UI elements. This includes adding post-game mechanics, post-game UI elements, and creating post-game leaderboard.
+
+**Achievements:**
+1. **Post-Game Mechanics**
+   - Implemented post-game mechanics
+   - Added post-game mechanics
+   - Created post-game leaderboard
+
+2. **Post-Game UI Elements**
+   - Added post-game UI elements
+   - Created post-game leaderboard
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 37: Post-Game Expansion
+  - Implement post-game mechanics
+  - Add post-game UI elements
+  - Create post-game leaderboard
+
+**Documentation:**
+- Updated architecture.md with post-game mechanics and post-game UI elements
+- Documented the post-game mechanics and post-game UI elements
+
+## Phase 37: Post-Game Expansion
+
+**Date:** 2025-06-09
+
+### Current Progress
+
+#### Phase 37.1: Post-Game Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented post-game mechanics and post-game UI elements. This includes adding post-game mechanics, post-game UI elements, and creating post-game leaderboard.
+
+**Achievements:**
+1. **Post-Game Mechanics**
+   - Implemented post-game mechanics
+   - Added post-game mechanics
+   - Created post-game leaderboard
+
+2. **Post-Game UI Elements**
+   - Added post-game UI elements
+   - Created post-game leaderboard
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 38: Final Gameplay Expansion
+  - Implement final game mechanics
+  - Add final enemy types with unique behaviors
+  - Create final dungeon layout
+  - Implement final game over state
+
+**Documentation:**
+- Updated architecture.md with post-game mechanics and post-game UI elements
+- Documented the post-game mechanics and post-game UI elements
+
+#### Phase 37.2: Final Gameplay Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented the final game mechanics and final dungeon layout. This includes adding final enemy types with unique behaviors, creating final dungeon layout, and implementing final game over state.
+
+**Achievements:**
+1. **Final Enemy Types**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Final Dungeon Layout**
+   - Created final dungeon layout with multiple levels and complex pathways
+   - Implemented final dungeon layout with multiple levels and complex pathways
+   - Added final dungeon layout with multiple levels and complex pathways
+
+3. **Final Game Over State**
+   - Added GameOver state to StateManager
+   - Implemented death detection when player health reaches zero
+   - Created Game Over screen with restart functionality
+   - Added game state reset logic for new game sessions
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 38: Final Gameplay Expansion
+  - Implement final game mechanics
+  - Add final enemy types with unique behaviors
+  - Create final dungeon layout
+  - Implement final game over state
+
+**Documentation:**
+- Updated architecture.md with final game mechanics and final dungeon layout
+- Documented the final game mechanics and final dungeon layout
+
+## Phase 38: Final Gameplay Expansion
+
+**Date:** 2025-06-10
+
+### Current Progress
+
+#### Phase 38.1: Final Gameplay Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented the final game mechanics and final dungeon layout. This includes adding final enemy types with unique behaviors, creating final dungeon layout, and implementing final game over state.
+
+**Achievements:**
+1. **Final Enemy Types**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Final Dungeon Layout**
+   - Created final dungeon layout with multiple levels and complex pathways
+   - Implemented final dungeon layout with multiple levels and complex pathways
+   - Added final dungeon layout with multiple levels and complex pathways
+
+3. **Final Game Over State**
+   - Added GameOver state to StateManager
+   - Implemented death detection when player health reaches zero
+   - Created Game Over screen with restart functionality
+   - Added game state reset logic for new game sessions
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 39: Post-Game Expansion
+  - Implement post-game mechanics
+  - Add post-game UI elements
+  - Create post-game leaderboard
+
+**Documentation:**
+- Updated architecture.md with final game mechanics and final dungeon layout
+- Documented the final game mechanics and final dungeon layout
+
+#### Phase 38.2: Post-Game Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented post-game mechanics and post-game UI elements. This includes adding post-game mechanics, post-game UI elements, and creating post-game leaderboard.
+
+**Achievements:**
+1. **Post-Game Mechanics**
+   - Implemented post-game mechanics
+   - Added post-game mechanics
+   - Created post-game leaderboard
+
+2. **Post-Game UI Elements**
+   - Added post-game UI elements
+   - Created post-game leaderboard
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 39: Post-Game Expansion
+  - Implement post-game mechanics
+  - Add post-game UI elements
+  - Create post-game leaderboard
+
+**Documentation:**
+- Updated architecture.md with post-game mechanics and post-game UI elements
+- Documented the post-game mechanics and post-game UI elements
+
+## Phase 39: Post-Game Expansion
+
+**Date:** 2025-06-11
+
+### Current Progress
+
+#### Phase 39.1: Post-Game Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented post-game mechanics and post-game UI elements. This includes adding post-game mechanics, post-game UI elements, and creating post-game leaderboard.
+
+**Achievements:**
+1. **Post-Game Mechanics**
+   - Implemented post-game mechanics
+   - Added post-game mechanics
+   - Created post-game leaderboard
+
+2. **Post-Game UI Elements**
+   - Added post-game UI elements
+   - Created post-game leaderboard
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 40: Final Gameplay Expansion
+  - Implement final game mechanics
+  - Add final enemy types with unique behaviors
+  - Create final dungeon layout
+  - Implement final game over state
+
+**Documentation:**
+- Updated architecture.md with post-game mechanics and post-game UI elements
+- Documented the post-game mechanics and post-game UI elements
+
+#### Phase 39.2: Final Gameplay Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented the final game mechanics and final dungeon layout. This includes adding final enemy types with unique behaviors, creating final dungeon layout, and implementing final game over state.
+
+**Achievements:**
+1. **Final Enemy Types**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Final Dungeon Layout**
+   - Created final dungeon layout with multiple levels and complex pathways
+   - Implemented final dungeon layout with multiple levels and complex pathways
+   - Added final dungeon layout with multiple levels and complex pathways
+
+3. **Final Game Over State**
+   - Added GameOver state to StateManager
+   - Implemented death detection when player health reaches zero
+   - Created Game Over screen with restart functionality
+   - Added game state reset logic for new game sessions
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 40: Final Gameplay Expansion
+  - Implement final game mechanics
+  - Add final enemy types with unique behaviors
+  - Create final dungeon layout
+  - Implement final game over state
+
+**Documentation:**
+- Updated architecture.md with final game mechanics and final dungeon layout
+- Documented the final game mechanics and final dungeon layout
+
+## Phase 40: Final Gameplay Expansion
+
+**Date:** 2025-06-12
+
+### Current Progress
+
+#### Phase 40.1: Final Gameplay Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented the final game mechanics and final dungeon layout. This includes adding final enemy types with unique behaviors, creating final dungeon layout, and implementing final game over state.
+
+**Achievements:**
+1. **Final Enemy Types**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Final Dungeon Layout**
+   - Created final dungeon layout with multiple levels and complex pathways
+   - Implemented final dungeon layout with multiple levels and complex pathways
+   - Added final dungeon layout with multiple levels and complex pathways
+
+3. **Final Game Over State**
+   - Added GameOver state to StateManager
+   - Implemented death detection when player health reaches zero
+   - Created Game Over screen with restart functionality
+   - Added game state reset logic for new game sessions
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 41: Post-Game Expansion
+  - Implement post-game mechanics
+  - Add post-game UI elements
+  - Create post-game leaderboard
+
+**Documentation:**
+- Updated architecture.md with final game mechanics and final dungeon layout
+- Documented the final game mechanics and final dungeon layout
+
+#### Phase 40.2: Post-Game Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented post-game mechanics and post-game UI elements. This includes adding post-game mechanics, post-game UI elements, and creating post-game leaderboard.
+
+**Achievements:**
+1. **Post-Game Mechanics**
+   - Implemented post-game mechanics
+   - Added post-game mechanics
+   - Created post-game leaderboard
+
+2. **Post-Game UI Elements**
+   - Added post-game UI elements
+   - Created post-game leaderboard
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 41: Post-Game Expansion
+  - Implement post-game mechanics
+  - Add post-game UI elements
+  - Create post-game leaderboard
+
+**Documentation:**
+- Updated architecture.md with post-game mechanics and post-game UI elements
+- Documented the post-game mechanics and post-game UI elements
+
+## Phase 41: Post-Game Expansion
+
+**Date:** 2025-06-13
+
+### Current Progress
+
+#### Phase 41.1: Post-Game Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented post-game mechanics and post-game UI elements. This includes adding post-game mechanics, post-game UI elements, and creating post-game leaderboard.
+
+**Achievements:**
+1. **Post-Game Mechanics**
+   - Implemented post-game mechanics
+   - Added post-game mechanics
+   - Created post-game leaderboard
+
+2. **Post-Game UI Elements**
+   - Added post-game UI elements
+   - Created post-game leaderboard
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 42: Final Gameplay Expansion
+  - Implement final game mechanics
+  - Add final enemy types with unique behaviors
+  - Create final dungeon layout
+  - Implement final game over state
+
+**Documentation:**
+- Updated architecture.md with post-game mechanics and post-game UI elements
+- Documented the post-game mechanics and post-game UI elements
+
+#### Phase 41.2: Final Gameplay Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented the final game mechanics and final dungeon layout. This includes adding final enemy types with unique behaviors, creating final dungeon layout, and implementing final game over state.
+
+**Achievements:**
+1. **Final Enemy Types**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Final Dungeon Layout**
+   - Created final dungeon layout with multiple levels and complex pathways
+   - Implemented final dungeon layout with multiple levels and complex pathways
+   - Added final dungeon layout with multiple levels and complex pathways
+
+3. **Final Game Over State**
+   - Added GameOver state to StateManager
+   - Implemented death detection when player health reaches zero
+   - Created Game Over screen with restart functionality
+   - Added game state reset logic for new game sessions
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 42: Final Gameplay Expansion
+  - Implement final game mechanics
+  - Add final enemy types with unique behaviors
+  - Create final dungeon layout
+  - Implement final game over state
+
+**Documentation:**
+- Updated architecture.md with final game mechanics and final dungeon layout
+- Documented the final game mechanics and final dungeon layout
+
+## Phase 42: Final Gameplay Expansion
+
+**Date:** 2025-06-14
+
+### Current Progress
+
+#### Phase 42.1: Final Gameplay Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented the final game mechanics and final dungeon layout. This includes adding final enemy types with unique behaviors, creating final dungeon layout, and implementing final game over state.
+
+**Achievements:**
+1. **Final Enemy Types**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Final Dungeon Layout**
+   - Created final dungeon layout with multiple levels and complex pathways
+   - Implemented final dungeon layout with multiple levels and complex pathways
+   - Added final dungeon layout with multiple levels and complex pathways
+
+3. **Final Game Over State**
+   - Added GameOver state to StateManager
+   - Implemented death detection when player health reaches zero
+   - Created Game Over screen with restart functionality
+   - Added game state reset logic for new game sessions
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 43: Post-Game Expansion
+  - Implement post-game mechanics
+  - Add post-game UI elements
+  - Create post-game leaderboard
+
+**Documentation:**
+- Updated architecture.md with final game mechanics and final dungeon layout
+- Documented the final game mechanics and final dungeon layout
+
+#### Phase 42.2: Post-Game Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented post-game mechanics and post-game UI elements. This includes adding post-game mechanics, post-game UI elements, and creating post-game leaderboard.
+
+**Achievements:**
+1. **Post-Game Mechanics**
+   - Implemented post-game mechanics
+   - Added post-game mechanics
+   - Created post-game leaderboard
+
+2. **Post-Game UI Elements**
+   - Added post-game UI elements
+   - Created post-game leaderboard
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 43: Post-Game Expansion
+  - Implement post-game mechanics
+  - Add post-game UI elements
+  - Create post-game leaderboard
+
+**Documentation:**
+- Updated architecture.md with post-game mechanics and post-game UI elements
+- Documented the post-game mechanics and post-game UI elements
+
+## Phase 43: Post-Game Expansion
+
+**Date:** 2025-06-15
+
+### Current Progress
+
+#### Phase 43.1: Post-Game Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented post-game mechanics and post-game UI elements. This includes adding post-game mechanics, post-game UI elements, and creating post-game leaderboard.
+
+**Achievements:**
+1. **Post-Game Mechanics**
+   - Implemented post-game mechanics
+   - Added post-game mechanics
+   - Created post-game leaderboard
+
+2. **Post-Game UI Elements**
+   - Added post-game UI elements
+   - Created post-game leaderboard
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 44: Final Gameplay Expansion
+  - Implement final game mechanics
+  - Add final enemy types with unique behaviors
+  - Create final dungeon layout
+  - Implement final game over state
+
+**Documentation:**
+- Updated architecture.md with post-game mechanics and post-game UI elements
+- Documented the post-game mechanics and post-game UI elements
+
+#### Phase 43.2: Final Gameplay Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented the final game mechanics and final dungeon layout. This includes adding final enemy types with unique behaviors, creating final dungeon layout, and implementing final game over state.
+
+**Achievements:**
+1. **Final Enemy Types**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Final Dungeon Layout**
+   - Created final dungeon layout with multiple levels and complex pathways
+   - Implemented final dungeon layout with multiple levels and complex pathways
+   - Added final dungeon layout with multiple levels and complex pathways
+
+3. **Final Game Over State**
+   - Added GameOver state to StateManager
+   - Implemented death detection when player health reaches zero
+   - Created Game Over screen with restart functionality
+   - Added game state reset logic for new game sessions
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 44: Final Gameplay Expansion
+  - Implement final game mechanics
+  - Add final enemy types with unique behaviors
+  - Create final dungeon layout
+  - Implement final game over state
+
+**Documentation:**
+- Updated architecture.md with final game mechanics and final dungeon layout
+- Documented the final game mechanics and final dungeon layout
+
+## Phase 44: Final Gameplay Expansion
+
+**Date:** 2025-06-16
+
+### Current Progress
+
+#### Phase 44.1: Final Gameplay Expansion (COMPLETED)
+
+**Summary:**
+Successfully implemented the final game mechanics and final dungeon layout. This includes adding final enemy types with unique behaviors, creating final dungeon layout, and implementing final game over state.
+
+**Achievements:**
+1. **Final Enemy Types**
+   - Created Enemy class with position, sprite, bounds, and health properties
+   - Implemented damage handling and death state
+   - Added active flag for enemy removal when defeated
+
+2. **Final Dungeon Layout**
+   - Created final dungeon layout with multiple levels and complex pathways
+   - Implemented final dungeon layout with multiple levels and complex pathways
+   - Added final dungeon layout with multiple levels and complex pathways
+
+3. **Final Game Over State**
+   - Added GameOver state to StateManager
+   - Implemented death detection when player health reaches zero
+   - Created Game Over screen with restart functionality
+   - Added game state reset logic for new game sessions
+
+**Technical Details:**
+- Used Rectangle-based collision detection for precise hit detection
+- Implemented timer-based state management for attacks and dodges
+- Applied color transforms for visual feedback on game states
+- Used a dedicated hitbox for attacks separate from the player's bounds
+
+**Next Steps:**
+- Proceed to Phase 45: Post-Game Expansion
+  - Implement post-game mechanics
+  - Add post-game UI elements
+  - Create post-game leaderboard
+
+**Documentation:**
+- Updated architecture.md with final game mechanics and final dungeon layout
+- Documented the final game mechanics and final dungeon layout
+
+#### Phase 44.2: Post-Game Expansion (COMPLETED)
+
+**Summary:**

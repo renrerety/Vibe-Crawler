@@ -212,6 +212,103 @@ The buff management system supports independent tracking of multiple buff types:
 5. The `GetBuffDuration` method provides remaining time for display in the UI
 6. Visual indicators change based on the combination of active buffs
 
+### 3.10 User Interface System
+
+The UI system provides the player with critical information about the game state through visual elements:
+
+- **Health Display**: Shows current and maximum health with both a bar and numeric indicators
+- **Aetherium Essence Counter**: Displays the collected essence resource
+- **Buff Indicators**: Shows active buffs with remaining duration timers
+- **Minimap**: Provides positional awareness of the dungeon layout and entities
+- **Interaction Prompts**: Contextual text showing available interactions
+
+#### UI Components
+
+The current implementation includes several UI components:
+
+1. **Text Rendering**
+   - Uses MonoGame's SpriteFont system for text display
+   - Supports measurement of text for proper positioning
+   - Renders dynamic values like health points and duration timers
+
+2. **Health Bar**
+   - Shows a visual representation of player health as a percentage
+   - Uses color-coded fill bar (green) with dark background
+   - Includes numeric display of current/maximum health
+   - Updates dynamically when player takes damage
+
+3. **Resource Display**
+   - Shows current Aetherium Essence count
+   - Uses icon + text representation
+   - Updates when resources are gained or spent
+
+4. **Buff Status Panel**
+   - Displays currently active buffs
+   - Shows buff type with remaining duration
+   - Uses color-coding to match visual player effects
+   - Only appears when buffs are active
+
+5. **Minimap System**
+   - Displays a scaled-down representation of the dungeon
+   - Shows rooms, corridors and entity positions
+   - Uses coordinate transformation to map game world to minimap
+   - Color-codes different elements (player, enemies, altar)
+   - Provides constant location awareness
+
+6. **Contextual Prompts**
+   - Shows interaction hints when near interactive objects
+   - Appears when player is within range of the weaving altar
+   - Provides instruction on available actions
+   - Uses semi-transparent background for legibility
+
+#### UI Layout
+
+The UI is organized to provide information without obstructing gameplay:
+
+1. **Top-Left**: Player status information
+   - Health bar with text display
+   - Aetherium Essence counter
+   - Active buff indicators with timers
+
+2. **Top-Right**: Minimap
+   - Scaled representation of the dungeon
+   - Current player position
+   - Enemy and altar locations
+
+3. **Bottom-Center**: Contextual prompts
+   - Appears only when relevant
+   - Shows available interactions
+
+#### Technical Implementation
+
+The UI system is implemented with several technical features:
+
+1. **Semi-Transparent Panels**
+   - Dark backgrounds for better contrast and readability
+   - Proper opacity to avoid obscuring the game view
+
+2. **Dynamic Scaling**
+   - Health bar scales properly with player's current health
+   - Interface elements maintain proper proportions
+
+3. **Coordinate Transformation**
+   - Converts world space coordinates to minimap space
+   - Maintains proper relative positions of entities
+   - Scales appropriately to fit the minimap area
+
+4. **Text Measurements**
+   - Uses SpriteFont.MeasureString for proper text positioning
+   - Centers text within elements like health bars
+   - Ensures readable display of numeric values
+
+5. **Color Coding**
+   - Uses consistent colors for game elements
+   - Green for health, purple for essence
+   - Buff colors match their visual effects on the player
+   - Enemy indicators in red for clear distinction
+
+The UI system is designed to be non-intrusive while providing all necessary information for gameplay. It currently uses primitive rendering with colored rectangles and text but has been architecturally designed to allow future enhancement with more sophisticated graphics and animations.
+
 ## 4. Data Flow
 
 1. The `Program.cs` file initializes the `AetheriumGame` instance and starts the game loop.
