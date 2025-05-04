@@ -32,13 +32,13 @@ namespace AetheriumDepths.Entities
         /// <summary>
         /// Current health of the enemy.
         /// </summary>
-        public int Health { get; private set; }
+        public int Health { get; protected set; }
 
         /// <summary>
         /// Flag indicating if this enemy is active in the game.
         /// Inactive enemies are scheduled for removal.
         /// </summary>
-        public bool IsActive { get; private set; } = true;
+        public bool IsActive { get; protected set; } = true;
         
         /// <summary>
         /// The range at which the enemy detects and pursues the player.
@@ -58,42 +58,42 @@ namespace AetheriumDepths.Entities
         /// <summary>
         /// The direction the enemy is currently facing.
         /// </summary>
-        public Vector2 FacingDirection { get; private set; } = new Vector2(0, 1); // Default facing down
+        public Vector2 FacingDirection { get; protected set; } = new Vector2(0, 1); // Default facing down
         
         /// <summary>
         /// Flag indicating if an attack is currently active.
         /// </summary>
-        public bool IsAttacking { get; private set; }
+        public bool IsAttacking { get; protected set; }
         
         /// <summary>
         /// The hitbox for the current attack.
         /// </summary>
-        public Rectangle AttackHitbox { get; private set; }
+        public Rectangle AttackHitbox { get; protected set; }
         
         /// <summary>
         /// Timer for the duration of the attack.
         /// </summary>
-        private float _attackTimer;
+        protected float _attackTimer;
         
         /// <summary>
         /// Duration of the attack in seconds.
         /// </summary>
-        private const float ATTACK_DURATION = 0.3f;
+        protected const float ATTACK_DURATION = 0.3f;
         
         /// <summary>
         /// Cooldown timer between attacks.
         /// </summary>
-        private float _attackCooldownTimer;
+        protected float _attackCooldownTimer;
         
         /// <summary>
         /// Cooldown duration between attacks in seconds.
         /// </summary>
-        private const float ATTACK_COOLDOWN = 1.5f;
+        protected const float ATTACK_COOLDOWN = 1.5f;
         
         /// <summary>
         /// The size of the attack hitbox.
         /// </summary>
-        private const int ATTACK_SIZE = 32;
+        protected const int ATTACK_SIZE = 32;
 
         /// <summary>
         /// Creates a new enemy at the specified position.
@@ -117,7 +117,7 @@ namespace AetheriumDepths.Entities
         /// <param name="playerPosition">The current position of the player.</param>
         /// <param name="deltaTime">Time elapsed since the last update.</param>
         /// <param name="dungeon">The current dungeon for collision detection.</param>
-        public void Update(Vector2 playerPosition, float deltaTime, Dungeon dungeon)
+        public virtual void Update(Vector2 playerPosition, float deltaTime, Dungeon dungeon)
         {
             if (!IsActive) return;
             
@@ -215,7 +215,7 @@ namespace AetheriumDepths.Entities
         /// Initiates an attack in the direction of the player.
         /// </summary>
         /// <param name="directionToPlayer">Direction vector pointing to the player.</param>
-        private void Attack(Vector2 directionToPlayer)
+        protected virtual void Attack(Vector2 directionToPlayer)
         {
             // Start attack
             IsAttacking = true;
@@ -248,59 +248,59 @@ namespace AetheriumDepths.Entities
         /// <param name="damage">The amount of damage to deal.</param>
         public void TakeDamage(int damage)
         {
+            if (!IsActive) return;
+            
             Health -= damage;
+            Console.WriteLine($"Enemy took {damage} damage. Health: {Health}");
             
             // Check if enemy is defeated
             if (Health <= 0)
             {
                 IsActive = false;
+                Console.WriteLine("Enemy defeated!");
             }
         }
-        
+
         /// <summary>
-        /// Reactivates the enemy with full health.
+        /// Reactivates the enemy with optionally specified health.
         /// </summary>
-        /// <param name="health">Optional new health value. If not specified, the initial health is restored.</param>
-        public void Reactivate(int health = -1)
+        /// <param name="health">The new health value. If -1, uses the current health.</param>
+        public virtual void Reactivate(int health = -1)
         {
-            // If health parameter is provided, use it; otherwise keep current health
-            if (health > 0)
+            if (health >= 0)
             {
                 Health = health;
             }
             
-            // Reset attack state
+            IsActive = true;
             IsAttacking = false;
             _attackTimer = 0f;
             _attackCooldownTimer = 0f;
             
-            // Set active state to true
-            IsActive = true;
+            Console.WriteLine($"Enemy reactivated with {Health} health.");
         }
 
         /// <summary>
         /// Draws the enemy to the screen.
         /// </summary>
         /// <param name="spriteBatch">The sprite batch to use for drawing.</param>
-        public void Draw(SpriteBatch spriteBatch)
+        public virtual void Draw(SpriteBatch spriteBatch)
         {
-            if (IsActive)
-            {
-                spriteBatch.Draw(Sprite, Position, Color.White);
-            }
+            if (!IsActive || Sprite == null) return;
+            
+            spriteBatch.Draw(Sprite, Position, Color.White);
         }
         
         /// <summary>
-        /// Draws the attack hitbox for debugging purposes.
+        /// Draws the attack hitbox for debugging.
         /// </summary>
         /// <param name="spriteBatch">The sprite batch to use for drawing.</param>
-        /// <param name="debugTexture">A solid color texture for drawing the hitbox.</param>
+        /// <param name="debugTexture">The debug texture to use for drawing.</param>
         public void DrawAttackHitbox(SpriteBatch spriteBatch, Texture2D debugTexture)
         {
-            if (IsAttacking)
-            {
-                spriteBatch.Draw(debugTexture, AttackHitbox, Color.Red * 0.5f);
-            }
+            if (!IsAttacking || debugTexture == null) return;
+            
+            spriteBatch.Draw(debugTexture, AttackHitbox, Color.Red * 0.5f);
         }
     }
 } 

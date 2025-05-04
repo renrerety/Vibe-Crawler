@@ -2,6 +2,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using AetheriumDepths.Generation;
+using System.Collections.Generic;
 
 namespace AetheriumDepths.Entities
 {
@@ -132,16 +133,59 @@ namespace AetheriumDepths.Entities
         private const float DODGE_SPEED_MULTIPLIER = 2.5f;
 
         /// <summary>
+        /// Current mana for spell casting.
+        /// </summary>
+        public int CurrentMana { get; private set; }
+
+        /// <summary>
+        /// Maximum mana capacity.
+        /// </summary>
+        public int MaxMana { get; private set; } = 100; // Default max mana
+
+        /// <summary>
+        /// Timer for spell cooldown.
+        /// </summary>
+        private float _spellCooldownTimer = 0f;
+
+        /// <summary>
+        /// Duration of the spell cooldown in seconds.
+        /// </summary>
+        private const float SPELL_COOLDOWN_DURATION = 0.7f;
+
+        /// <summary>
+        /// Flag indicating if a spell cast is ready.
+        /// </summary>
+        public bool IsSpellReady => _spellCooldownTimer <= 0f;
+
+        /// <summary>
+        /// Cost in mana to cast a spell.
+        /// </summary>
+        private const int SPELL_MANA_COST = 10;
+
+        /// <summary>
+        /// List of active projectiles fired by the player.
+        /// </summary>
+        private List<Projectile> _activeProjectiles = new List<Projectile>();
+
+        /// <summary>
+        /// The texture used for projectiles fired by the player.
+        /// </summary>
+        private Texture2D _projectileTexture;
+
+        /// <summary>
         /// Creates a new player at the specified position.
         /// </summary>
         /// <param name="position">The initial position of the player.</param>
         /// <param name="sprite">The sprite texture for the player.</param>
-        public Player(Vector2 position, Texture2D sprite)
+        /// <param name="projectileTexture">The texture for projectiles fired by the player.</param>
+        public Player(Vector2 position, Texture2D sprite, Texture2D projectileTexture = null)
         {
             Position = position;
             Sprite = sprite;
+            _projectileTexture = projectileTexture;
             CurrentHealth = MaxHealth; // Initialize current health to max health
-            Console.WriteLine($"Player created with {CurrentHealth}/{MaxHealth} health");
+            CurrentMana = MaxMana; // Initialize current mana to max mana
+            Console.WriteLine($"Player created with {CurrentHealth}/{MaxHealth} health and {CurrentMana}/{MaxMana} mana");
         }
 
         /// <summary>
@@ -245,7 +289,8 @@ namespace AetheriumDepths.Entities
         /// Updates the player's state, including attack, dodge, and buff timers.
         /// </summary>
         /// <param name="deltaTime">Time elapsed since the last update.</param>
-        public void Update(float deltaTime)
+        /// <param name="dungeon">The current dungeon for collision detection.</param>
+        public void Update(float deltaTime, Dungeon dungeon)
         {
             // Update attack timer if an attack is active
             if (IsAttacking)
@@ -267,25 +312,51 @@ namespace AetheriumDepths.Entities
                 }
             }
             
-            // Update damage buff duration if active
+            // Update damage buff duration
             if (HasDamageBuff)
             {
                 _damageBuffDuration -= deltaTime;
                 if (_damageBuffDuration <= 0f)
                 {
                     HasDamageBuff = false;
-                    Console.WriteLine("Damage buff has expired");
                 }
             }
             
-            // Update speed buff duration if active
+            // Update speed buff duration
             if (HasSpeedBuff)
             {
                 _speedBuffDuration -= deltaTime;
                 if (_speedBuffDuration <= 0f)
                 {
                     HasSpeedBuff = false;
-                    Console.WriteLine("Speed buff has expired");
+                }
+            }
+            
+            // Update spell cooldown timer
+            if (_spellCooldownTimer > 0f)
+            {
+                _spellCooldownTimer -= deltaTime;
+                if (_spellCooldownTimer < 0f)
+                {
+                    _spellCooldownTimer = 0f;
+                }
+            }
+            
+            // Gradually regenerate mana over time (1 mana per second)
+            if (CurrentMana < MaxMana)
+            {
+                CurrentMana = Math.Min(MaxMana, CurrentMana + (int)(deltaTime));
+            }
+            
+            // Update projectiles
+            for (int i = _activeProjectiles.Count - 1; i >= 0; i--)
+            {
+                _activeProjectiles[i].Update(deltaTime, dungeon);
+                
+                // Remove inactive projectiles
+                if (!_activeProjectiles[i].IsActive)
+                {
+                    _activeProjectiles.RemoveAt(i);
                 }
             }
         }
@@ -428,50 +499,123 @@ namespace AetheriumDepths.Entities
         }
 
         /// <summary>
+        /// Casts a spell projectile in the direction the player is facing.
+        /// </summary>
+        /// <returns>True if the spell was cast, false if on cooldown or insufficient mana.</returns>
+        public bool CastSpell()
+        {
+            // Check if spell is on cooldown
+            if (_spellCooldownTimer > 0f)
+            {
+                return false;
+            }
+            
+            // Check if player has enough mana
+            if (CurrentMana < SPELL_MANA_COST)
+            {
+                Console.WriteLine("Not enough mana to cast spell");
+                return false;
+            }
+            
+            // Check if projectile texture is available
+            if (_projectileTexture == null)
+            {
+                Console.WriteLine("No projectile texture available");
+                return false;
+            }
+            
+            // Consume mana
+            CurrentMana -= SPELL_MANA_COST;
+            
+            // Start cooldown
+            _spellCooldownTimer = SPELL_COOLDOWN_DURATION;
+            
+            // Create projectile at player's position offset toward the facing direction
+            Vector2 projectileStart = Position + (LastMovementDirection * Sprite.Width / 2);
+            
+            // Create the projectile with the player's damage (2 base damage)
+            Projectile projectile = new Projectile(
+                projectileStart,
+                LastMovementDirection,
+                _projectileTexture,
+                2, // Base projectile damage
+                350f, // Projectile speed
+                true); // Mark as player projectile
+                
+            // Add to active projectiles
+            _activeProjectiles.Add(projectile);
+            
+            Console.WriteLine("Player cast a spell");
+            return true;
+        }
+        
+        /// <summary>
+        /// Gets all active projectiles fired by the player.
+        /// </summary>
+        /// <returns>A list of active projectiles.</returns>
+        public List<Projectile> GetActiveProjectiles()
+        {
+            return _activeProjectiles;
+        }
+        
+        /// <summary>
+        /// Gets the remaining spell cooldown time.
+        /// </summary>
+        /// <returns>The cooldown time in seconds.</returns>
+        public float GetSpellCooldownRemaining()
+        {
+            return _spellCooldownTimer;
+        }
+
+        /// <summary>
         /// Draws the player to the screen.
         /// </summary>
         /// <param name="spriteBatch">The sprite batch to use for drawing.</param>
-        /// <param name="damageInvincibility">Optional timer for damage invincibility.</param>
+        /// <param name="damageInvincibility">Optional damage invincibility timer for visual effects.</param>
         public void Draw(SpriteBatch spriteBatch, float damageInvincibility = 0f)
         {
-            // Apply appropriate color based on player state
-            Color playerColor;
+            if (Sprite == null) return;
             
-            if (IsInvincible)
+            // Determine the color to draw the player with based on status effects
+            Color color = Color.White;
+            
+            // Flash red when taking damage
+            if (damageInvincibility > 0)
             {
-                // Semi-transparent when invincible (dodge)
-                playerColor = new Color(255, 255, 255, 150);
+                // Oscillate between red and white during invincibility
+                float flashRate = 10f; // Flash speed
+                float flashValue = (float)Math.Sin(damageInvincibility * flashRate * Math.PI) * 0.5f + 0.5f;
+                color = Color.Lerp(Color.Red, Color.White, flashValue);
             }
-            else if (damageInvincibility > 0f)
+            // Bluish when dodging
+            else if (IsDodging)
             {
-                // Flash red when in damage invincibility state
-                // Use a pulsing effect based on the timer
-                float pulseRate = 10f; // Flashing speed
-                float alpha = 0.7f + (float)Math.Sin(damageInvincibility * pulseRate) * 0.3f;
-                playerColor = new Color(255, 100, 100, (int)(255 * alpha));
+                color = Color.LightBlue;
             }
+            // Yellow when damage buff is active
             else if (HasDamageBuff && HasSpeedBuff)
             {
-                // Orange tint when both buffs are active
-                playerColor = new Color(255, 165, 0);
+                // Orange when both buffs are active
+                color = Color.Orange;
             }
             else if (HasDamageBuff)
             {
-                // Yellow tint when damage buff is active
-                playerColor = Color.Yellow;
+                color = Color.Yellow;
             }
+            // Green when speed buff is active
             else if (HasSpeedBuff)
             {
-                // Green tint when speed buff is active
-                playerColor = Color.LightGreen;
-            }
-            else
-            {
-                // Normal color
-                playerColor = Color.White;
+                color = Color.LightGreen;
             }
             
-            spriteBatch.Draw(Sprite, Position, playerColor);
+            // Draw the player sprite
+            spriteBatch.Draw(Sprite, Position, color);
+            
+            // Draw active projectiles
+            foreach (Projectile projectile in _activeProjectiles)
+            {
+                projectile.Draw(spriteBatch);
+            }
         }
 
         /// <summary>

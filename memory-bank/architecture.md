@@ -324,91 +324,139 @@ The UI system is implemented with several technical features:
 
 The UI system is designed to be non-intrusive while providing all necessary information for gameplay. It currently uses primitive rendering with colored rectangles and text but has been architecturally designed to allow future enhancement with more sophisticated graphics and animations.
 
-## 4. Data Flow
+### 3.11 Combat Manager System
 
-1. The `Program.cs` file initializes the `AetheriumGame` instance and starts the game loop.
-2. The `AetheriumGame` initializes core systems, including the `StateManager`, `InputManager`, and `DungeonGenerator`.
-3. When entering the `Gameplay` state, the `DungeonGenerator` creates a new dungeon layout.
-4. The player is positioned in the starting room, enemies are placed in other rooms, and the weaving altar is positioned in a middle room.
-5. During the game loop's `Update` phase:
-   - The `InputManager` processes raw input and maps to game actions
-   - The player moves and performs actions based on input
-   - Collision detection checks for attacks hitting enemies
-   - When enemies are defeated, Aetherium Essence is granted to the player
-   - Interaction with the weaving altar is detected and processed
-   - The current state is updated, and state transitions may occur
-6. During the game loop's `Draw` phase:
-   - The dungeon layout is rendered as room outlines
-   - The weaving altar is drawn with a distinctive color
-   - Entities (player, enemies) are drawn with appropriate visual state indicators
-   - Debug visuals like attack hitboxes are displayed
-   - Rendering is performed based on the current active state
+The Combat Manager system centralizes combat-related logic and provides a consistent interface for damage application, death handling, and combat events:
 
-## 5. Future Architecture Expansion
+- **CombatManager Class**: Core class that handles all combat interactions
+- **Damage Application**: Unified system for applying damage to both player and enemies
+- **Invincibility Management**: Handles player invincibility frames after taking damage
+- **Death Events**: Event-based system for handling enemy deaths and their consequences
+- **Loot Generation**: Uses events to trigger loot drops when enemies are defeated
 
-### 5.1 Enhanced Entity Component System
+The Combat Manager handles:
+1. **Damage Calculation**: Applies appropriate damage based on attacker and target
+2. **Buff Application**: Applies damage multipliers from active buffs
+3. **Invincibility Check**: Prevents damage during invincibility frames
+4. **Health Update**: Updates entity health values after damage
+5. **Death Processing**: Triggers events when entities are defeated
+6. **Resource Rewards**: Grants resources (Aetherium Essence) for defeating enemies
 
-For the next phase of development, we plan to transition toward a more formalized Entity Component System (ECS) architecture to improve scalability and maintainability:
+This architecture creates a centralized damage pipeline, ensuring consistent behavior across all combat interactions and simplifying future combat-related additions.
 
-- **Entity Manager**: Central registry for all game entities with unique IDs
-- **Component System**: Modular components that can be attached to entities:
-  - TransformComponent (position, rotation, scale)
-  - RenderComponent (sprite, animations, effects)
-  - CollisionComponent (hitboxes, collision response)
-  - CombatComponent (health, damage, attack patterns)
-  - AIComponent (behavior trees, pathfinding)
-  - BuffComponent (active effects, durations)
-- **System Processors**: Dedicated systems that process specific component types:
-  - RenderSystem (handles drawing all entities with RenderComponents)
-  - PhysicsSystem (manages collision detection and response)
-  - AISystem (updates AI behaviors and decisions)
-  - BuffSystem (manages buff application, duration, and removal)
+### 3.12 Loot System
 
-This approach will allow for greater code reuse, easier addition of new entity types, and better performance through more targeted system updates.
+The loot system provides a framework for item drops and player collection of beneficial items:
 
-### 5.2 Procedural Generation Enhancement
+- **LootItem Class**: Base class for all collectible items in the game
+- **LootType Enum**: Categorizes different types of loot (currently HealthPotion)
+- **Drop Mechanics**: Random chance-based system for enemy loot drops
+- **Collection Logic**: Collision-based collection when player touches items
+- **Effect Application**: Automatic application of item effects on collection
+- **Visual Feedback**: Animated rendering with hover effects for visibility
 
-The next iteration of the dungeon generation system will include:
+The loot system currently supports:
+1. **Health Potions**: Restore a fixed amount of player health
+2. **Drop Chance**: Configurable probability for loot drops from enemies
+3. **Visual Effects**: Rotation and hover animations for loot items
+4. **Automatic Collection**: Items are collected on player contact
+5. **Minimap Indicators**: Items are visible on the minimap for discovery
 
-- **Room Type System**: Different room templates based on purpose (combat, treasure, boss, altar)
-- **Corridor Generator**: Methods to connect rooms with logical pathways
-- **Biome System**: Different visual and gameplay themes for dungeon areas
-- **Constraint-Based Generation**: Rules to ensure playable and balanced layouts
-- **Seed-Based Generation**: Support for reproducible random dungeons
+This system is designed for easy expansion to include additional loot types in the future.
 
-The enhanced system will maintain the existing interface (GenerateDungeon method returning a Dungeon object) but with significantly more sophisticated internal algorithms.
+### 3.13 Projectile System
 
-### 5.3 UI Framework
+The projectile system enables ranged attacks for both the player and enemies:
 
-A dedicated UI framework will be implemented to handle:
+- **Projectile Class**: Represents a moving projectile with collision detection
+- **Source Tracking**: Identifies whether a projectile came from player or enemy
+- **Damage Values**: Configurable damage values for different projectile sources
+- **Movement Logic**: Direction-based velocity with collision checking
+- **Visual Effects**: Rotation and color-coding based on source
+- **Lifetime Management**: Automatic deactivation after wall collision or time limit
 
-- **UI State Management**: Separate from but coordinated with the main game state
-- **Component-Based UI**: Reusable elements (buttons, panels, sliders)
-- **Layout System**: Responsive positioning for different screen sizes
-- **Animation System**: Smooth transitions and effects for UI elements
-- **Input Handling**: UI-specific input processing with event propagation
+Key features of the projectile system include:
+1. **Wall Collision**: Projectiles are deactivated when hitting walls
+2. **Entity Collision**: Damage is applied when projectiles hit valid targets
+3. **Friendly Fire Prevention**: Projectiles only damage appropriate targets
+4. **Visual Distinction**: Player and enemy projectiles have different colors
+5. **Rotation Effects**: Projectiles rotate while in flight for visual appeal
+6. **Limited Lifetime**: Projectiles deactivate after a maximum duration
 
-The UI framework will be designed with mobile touch input in mind from the start to ensure good UX across all platforms.
+This system enables diverse ranged combat scenarios and is integrated with the Combat Manager for damage application.
 
-### 5.4 Asset Management System
+### 3.14 Enemy Variety System
 
-To support dynamic loading/unloading and optimize resource usage:
+The enemy variety system creates different enemy types with specialized behaviors:
 
-- **Asset Cache**: Smart caching of frequently used resources
-- **Lazy Loading**: On-demand loading of assets when needed
-- **Asset Bundles**: Grouped assets for efficient loading/unloading
-- **Memory Management**: Automatic cleanup of unused resources
-- **Platform-Specific Asset Variants**: Different resolution/format assets per platform
+- **Enemy Base Class**: Provides core functionality for all enemy types
+- **Type-Specific Subclasses**: Specialized enemies with unique behaviors
+- **AI Variation**: Different movement and attack patterns for each type
+- **Visual Distinction**: Unique colors or sprites for enemy identification
+- **Balanced Statistics**: Varied health, speed, and damage values for gameplay diversity
 
-### 5.5 Save/Load System
+Currently implemented enemy types:
+1. **Basic Enemy**: Standard melee enemy that pursues and attacks the player
+2. **Ranged Enemy**: 
+   - Maintains distance from the player
+   - Fires projectiles when within range
+   - Retreats if player gets too close
+   - Has lower health but can attack from a distance
+3. **Fast Enemy**:
+   - Moves significantly faster than other enemies
+   - Has reduced health as a trade-off
+   - Uses the same melee attack system as the basic enemy
+   - Has distinct visual appearance for quick identification
 
-A robust save/load system to persist player progress:
+The enemy variety system uses inheritance to share common functionality while allowing specialized behaviors, creating diverse combat scenarios while maintaining code organization.
 
-- **Serialization Framework**: Efficient binary or JSON serialization
-- **Save Slots**: Support for multiple save files
-- **Progressive Saving**: Save critical data frequently, full state less often
-- **Cross-Platform Compatibility**: Ensure saves work across different devices
-- **Cloud Sync**: Preparation for future cloud save integration
+### 3.15 Player Abilities System
+
+The player abilities system expands the player's combat options with spells and resource management:
+
+- **Mana System**: Resource pool for casting spells with regeneration over time
+- **Spell Casting**: Ability to fire projectiles using mana
+- **Cooldown Management**: Time-based cooldowns to balance spell usage
+- **UI Integration**: Visual feedback for mana levels and cooldown status
+- **Projectile Creation**: Spawns player-owned projectiles in the facing direction
+
+Key components include:
+1. **Mana Pool**: Current and maximum mana values with gradual regeneration
+2. **Spell Cooldown**: Timer-based cooldown to prevent spell spam
+3. **Mana Cost**: Resource cost for casting spells
+4. **Projectile Management**: Creation and tracking of player projectiles
+5. **Status Indicators**: UI elements showing mana, cooldowns, and spell readiness
+
+This system complements the existing melee combat abilities, giving players multiple combat options depending on the situation and enemy type.
+
+## 4. Current Version Implementation
+
+**Version 0.8**
+The current implementation includes:
+
+1. **Core Game Loop**: Complete with state management
+2. **Player Entity**: Movement, melee combat, spell casting, dodge, health, and mana systems
+3. **Enemy System**: Multiple enemy types with varied AI behaviors
+4. **Combat System**: AABB collision, attack hitboxes, projectiles, and damage calculation
+5. **Dungeon Generation**: BSP-based procedural generation with massive rooms
+6. **Aetherium Weaving**: Resource collection and buff application
+7. **Loot System**: Item drops from enemies with collection mechanics
+8. **UI System**: Health/mana bars, buff indicators, and minimap
+9. **Input Management**: Abstracted input for cross-platform support
+
+## 5. Planned Expansions
+
+Future development will focus on:
+
+1. **Environmental Hazards**: Add traps and hazards to dungeon rooms
+2. **Room Templates**: More varied and interesting rooms with unique features
+3. **Boss Encounters**: Specialized powerful enemies with unique mechanics
+4. **Additional Weaving Effects**: More buff types and permanent upgrades
+5. **Audio System**: Sound effects and music implementation
+6. **Persistence**: Save/load system for progress tracking
+7. **Additional Enemy Types**: More varied enemy behaviors and attributes
+8. **Richer UI**: Expanded information and feedback systems
+9. **Polish and Refinement**: Animations, particles, and visual effects
 
 ## 6. Technical Debt and Refactoring Needs
 

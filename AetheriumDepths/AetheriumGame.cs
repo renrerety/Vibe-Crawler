@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using AetheriumDepths.Core;
 using AetheriumDepths.Entities;
 using AetheriumDepths.Generation;
+using AetheriumDepths.Gameplay;
 
 namespace AetheriumDepths
 {
@@ -64,6 +65,25 @@ namespace AetheriumDepths
         // Camera following parameters
         private const float CameraLerpFactor = 0.1f; // Smooth following factor
 
+        // Combat Manager
+        private CombatManager _combatManager;
+        
+        // Loot items
+        private List<LootItem> _lootItems = new List<LootItem>();
+        private Texture2D _healthPotionTexture;
+        
+        // Projectile texture
+        private Texture2D _projectileTexture;
+        
+        // Enemy texture variants
+        private Texture2D _fastEnemyTexture;
+        private Texture2D _rangedEnemyTexture;
+        
+        // Enemy spawn constants
+        private const int FastEnemyHealth = 2; // Fast enemies have less health
+        private const int RangedEnemyHealth = 2; // Ranged enemies have same health as fast ones
+        private const float EnemySpawnChance = 0.5f; // 50% chance for enemies to drop items
+
         public AetheriumGame()
         {
             _graphics = new GraphicsDeviceManager(this);
@@ -110,17 +130,77 @@ namespace AetheriumDepths
             // Load the player sprite
             Texture2D playerSprite = Content.Load<Texture2D>("PlayerSprite");
             
-            // Create player (position will be set when entering Gameplay state)
-            _player = new Player(Vector2.Zero, playerSprite);
+            // Load projectile texture
+            try
+            {
+                _projectileTexture = Content.Load<Texture2D>("ProjectileSprite");
+                Console.WriteLine("Projectile texture loaded successfully");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading projectile texture: {ex.Message}");
+                // Create a simple placeholder
+                _projectileTexture = new Texture2D(GraphicsDevice, 8, 8);
+                Color[] colorData = new Color[64];
+                for (int i = 0; i < 64; i++)
+                {
+                    colorData[i] = Color.White;
+                }
+                _projectileTexture.SetData(colorData);
+            }
             
-            // Load enemy sprite
+            // Create player with projectile texture
+            _player = new Player(Vector2.Zero, playerSprite, _projectileTexture);
+            
+            // Load enemy sprites
             Texture2D enemySprite = Content.Load<Texture2D>("EnemySprite");
             
-            // Create one enemy at a fixed position (will be repositioned in GenerateDungeon)
-            Vector2 enemyPosition = new Vector2(
-                GraphicsDevice.Viewport.Width * 0.75f,
-                GraphicsDevice.Viewport.Height * 0.5f);
-            _enemies.Add(new Enemy(enemyPosition, enemySprite, EnemyHealth));
+            // Load or create fast enemy sprite
+            try
+            {
+                _fastEnemyTexture = Content.Load<Texture2D>("FastEnemySprite");
+                Console.WriteLine("Fast enemy texture loaded successfully");
+            }
+            catch (Exception)
+            {
+                // Use base enemy sprite with a color tint in the Draw method instead
+                _fastEnemyTexture = enemySprite;
+            }
+            
+            // Load or create ranged enemy sprite
+            try
+            {
+                _rangedEnemyTexture = Content.Load<Texture2D>("RangedEnemySprite");
+                Console.WriteLine("Ranged enemy texture loaded successfully");
+            }
+            catch (Exception)
+            {
+                // Use base enemy sprite with a color tint in the Draw method instead
+                _rangedEnemyTexture = enemySprite;
+            }
+            
+            // Create health potion texture if not available
+            try
+            {
+                _healthPotionTexture = Content.Load<Texture2D>("HealthPotionSprite");
+                Console.WriteLine("Health potion texture loaded successfully");
+            }
+            catch (Exception)
+            {
+                // Create a simple red placeholder
+                _healthPotionTexture = new Texture2D(GraphicsDevice, 16, 16);
+                Color[] colorData = new Color[256];
+                for (int i = 0; i < 256; i++)
+                {
+                    colorData[i] = Color.Red;
+                }
+                _healthPotionTexture.SetData(colorData);
+            }
+            
+            // Initialize enemy list
+            _enemies = new List<Enemy>();
+            
+            // Create enemies in the GenerateDungeon method
             
             // Load dedicated altar sprite
             Texture2D altarSprite = Content.Load<Texture2D>("AltarSprite");
@@ -147,6 +227,19 @@ namespace AetheriumDepths
             
             // Generate dungeon for the first time
             GenerateDungeon();
+            
+            // Initialize Combat Manager after entities are created
+            _combatManager = new CombatManager(
+                _player,
+                _enemies,
+                EnemyTouchDamage,
+                AttackDamage,
+                DamageBuffMultiplier,
+                AetheriumEssenceReward,
+                DamageInvincibilityDuration);
+                
+            // Subscribe to enemy killed event
+            _combatManager.EnemyKilled += OnEnemyKilled;
         }
         
         /// <summary>
@@ -154,6 +247,10 @@ namespace AetheriumDepths
         /// </summary>
         private void GenerateDungeon()
         {
+            // Clear existing enemies and loot
+            _enemies.Clear();
+            _lootItems.Clear();
+            
             // Generate a new dungeon using BSP
             _currentDungeon = _dungeonGenerator.GenerateBSPDungeon(GraphicsDevice.Viewport.Bounds);
             
@@ -171,20 +268,70 @@ namespace AetheriumDepths
                 Console.WriteLine($"Positioned player at {startPosition} in starting room");
             }
             
-            // Position one enemy in the last room
-            if (_currentDungeon?.Rooms.Count > 0 && _enemies.Count > 0)
+            // Spawn enemies in rooms (except the starting room)
+            if (_currentDungeon?.Rooms.Count > 1)
             {
-                Room lastRoom = _currentDungeon.Rooms[_currentDungeon.Rooms.Count - 1];
-                Vector2 enemyPosition = lastRoom.Center;
+                // Get all rooms except the starting room
+                var availableRooms = new List<Room>(_currentDungeon.Rooms);
+                if (_currentDungeon.StartingRoom != null)
+                {
+                    availableRooms.Remove(_currentDungeon.StartingRoom);
+                }
                 
-                // Adjust for enemy sprite center
-                enemyPosition.X -= (_enemies[0].Sprite?.Width ?? 0) / 2;
-                enemyPosition.Y -= (_enemies[0].Sprite?.Height ?? 0) / 2;
+                // Determine how many enemies to spawn (scale with number of rooms)
+                int totalEnemies = availableRooms.Count * 2; // 2 enemies per room on average
                 
-                _enemies[0].Position = enemyPosition;
-                _enemies[0].Reactivate(EnemyHealth); // Reactivate the enemy with default health
-                
-                Console.WriteLine($"Positioned enemy at {enemyPosition} in last room");
+                for (int i = 0; i < totalEnemies; i++)
+                {
+                    // Select a random room (weighted toward later rooms for more challenge)
+                    int roomIndex = Math.Min(
+                        (int)(Random.Shared.NextDouble() * Random.Shared.NextDouble() * availableRooms.Count),
+                        availableRooms.Count - 1);
+                    
+                    Room enemyRoom = availableRooms[roomIndex];
+                    
+                    // Randomize position within the room
+                    float posX = enemyRoom.Bounds.X + (float)Random.Shared.NextDouble() * enemyRoom.Bounds.Width;
+                    float posY = enemyRoom.Bounds.Y + (float)Random.Shared.NextDouble() * enemyRoom.Bounds.Height;
+                    
+                    // Ensure we're not too close to the edge
+                    posX = MathHelper.Clamp(posX, enemyRoom.Bounds.X + 32, enemyRoom.Bounds.X + enemyRoom.Bounds.Width - 32);
+                    posY = MathHelper.Clamp(posY, enemyRoom.Bounds.Y + 32, enemyRoom.Bounds.Y + enemyRoom.Bounds.Height - 32);
+                    
+                    Vector2 enemyPosition = new Vector2(posX, posY);
+                    
+                    // Randomly select enemy type
+                    double enemyTypeRoll = Random.Shared.NextDouble();
+                    Enemy newEnemy;
+                    
+                    if (enemyTypeRoll < 0.3) // 30% chance for ranged enemy
+                    {
+                        newEnemy = new RangedEnemy(
+                            enemyPosition, 
+                            _rangedEnemyTexture, 
+                            _projectileTexture,
+                            RangedEnemyHealth);
+                        Console.WriteLine($"Spawned ranged enemy at {enemyPosition}");
+                    }
+                    else if (enemyTypeRoll < 0.6) // 30% chance for fast enemy
+                    {
+                        newEnemy = new FastEnemy(
+                            enemyPosition,
+                            _fastEnemyTexture,
+                            FastEnemyHealth);
+                        Console.WriteLine($"Spawned fast enemy at {enemyPosition}");
+                    }
+                    else // 40% chance for basic enemy
+                    {
+                        newEnemy = new Enemy(
+                            enemyPosition,
+                            _enemies.Count > 0 ? _enemies[0].Sprite : Content.Load<Texture2D>("EnemySprite"),
+                            EnemyHealth);
+                        Console.WriteLine($"Spawned basic enemy at {enemyPosition}");
+                    }
+                    
+                    _enemies.Add(newEnemy);
+                }
             }
             
             // Position weaving altar in a random middle room
@@ -304,6 +451,23 @@ namespace AetheriumDepths
             }
         }
 
+        /// <summary>
+        /// Event handler for enemy killed events, handles loot drops.
+        /// </summary>
+        /// <param name="killedPosition">The position where the enemy was killed.</param>
+        private void OnEnemyKilled(Vector2 killedPosition)
+        {
+            // Random chance to spawn a health potion
+            if (Random.Shared.NextDouble() < EnemySpawnChance)
+            {
+                // Create health potion at the enemy's position
+                var healthPotion = new LootItem(killedPosition, _healthPotionTexture, LootType.HealthPotion);
+                _lootItems.Add(healthPotion);
+                
+                Console.WriteLine("Health potion dropped at enemy death location");
+            }
+        }
+
         #region State-specific Update and Draw methods
 
         private void UpdateMainMenu(GameTime gameTime)
@@ -319,6 +483,7 @@ namespace AetheriumDepths
             bool isAttackPressed = _inputManager.IsActionJustPressed(InputManager.GameAction.Attack);
             bool isDodgePressed = _inputManager.IsActionJustPressed(InputManager.GameAction.Dodge);
             bool isInteractPressed = _inputManager.IsActionJustPressed(InputManager.GameAction.Interact);
+            bool isSpellPressed = _inputManager.IsActionJustPressed(InputManager.GameAction.UseSpell);
             bool isRegeneratePressed = Keyboard.GetState().IsKeyDown(Keys.R);
             
             // Check for game regeneration
@@ -337,8 +502,11 @@ namespace AetheriumDepths
             // Update camera to follow player with smooth interpolation
             _camera.MoveToTarget(_player.Position, CameraLerpFactor);
             
+            // Update CombatManager
+            _combatManager.Update(deltaTime);
+            
             // Update player state (attack cooldown, dodge duration, etc.)
-            _player.Update(deltaTime);
+            _player.Update(deltaTime, _currentDungeon);
             
             // Process player attack
             if (isAttackPressed)
@@ -352,14 +520,10 @@ namespace AetheriumDepths
                 _player.Dodge();
             }
             
-            // Update damage invincibility timer
-            if (_damageInvincibilityTimer > 0)
+            // Process spell casting
+            if (isSpellPressed)
             {
-                _damageInvincibilityTimer -= deltaTime;
-                if (_damageInvincibilityTimer < 0)
-                {
-                    _damageInvincibilityTimer = 0;
-                }
+                _player.CastSpell();
             }
             
             // Check for weaving altar interaction
@@ -415,36 +579,68 @@ namespace AetheriumDepths
                     // Update enemy AI and position
                     enemy.Update(_player.Position, deltaTime, _currentDungeon);
                     
-                    // Check for enemy touch damage (if not in invincibility frames)
-                    if (!_player.IsInvincible && _damageInvincibilityTimer <= 0 && 
-                        CollisionUtility.CheckAABBCollision(_player.Bounds, enemy.Bounds))
+                    // Check for enemy touch damage
+                    if (CollisionUtility.CheckAABBCollision(_player.Bounds, enemy.Bounds))
                     {
-                        bool isPlayerAlive = _player.TakeDamage(EnemyTouchDamage);
-                        if (!isPlayerAlive)
+                        bool wasHit = _combatManager.ApplyPlayerDamage();
+                        if (wasHit && _player.CurrentHealth <= 0)
                         {
                             // Player died, transition to game over state
                             _stateManager.ChangeState(StateManager.GameState.GameOver);
                             return;
                         }
-                        
-                        // Start invincibility frames
-                        _damageInvincibilityTimer = DamageInvincibilityDuration;
                     }
                     
-                    // Check for enemy attack damage
-                    if (enemy.IsAttacking && !_player.IsInvincible && _damageInvincibilityTimer <= 0 && 
+                    // Check for enemy attack hitbox damage
+                    if (enemy.IsAttacking && 
                         CollisionUtility.CheckAABBCollision(_player.Bounds, enemy.AttackHitbox))
                     {
-                        bool isPlayerAlive = _player.TakeDamage(EnemyTouchDamage);
-                        if (!isPlayerAlive)
+                        bool wasHit = _combatManager.ApplyPlayerDamage();
+                        if (wasHit && _player.CurrentHealth <= 0)
                         {
                             // Player died, transition to game over state
                             _stateManager.ChangeState(StateManager.GameState.GameOver);
                             return;
                         }
-                        
-                        // Start invincibility frames
-                        _damageInvincibilityTimer = DamageInvincibilityDuration;
+                    }
+                    
+                    // Check for ranged enemy projectile collisions
+                    if (enemy is RangedEnemy rangedEnemy)
+                    {
+                        foreach (var projectile in rangedEnemy.GetActiveProjectiles())
+                        {
+                            if (projectile.IsActive && 
+                                CollisionUtility.CheckAABBCollision(_player.Bounds, projectile.Bounds))
+                            {
+                                bool wasHit = _combatManager.ApplyDamage(enemy, _player, projectile.Damage);
+                                projectile.Deactivate();
+                                
+                                if (wasHit && _player.CurrentHealth <= 0)
+                                {
+                                    // Player died, transition to game over state
+                                    _stateManager.ChangeState(StateManager.GameState.GameOver);
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Process player projectile collisions
+            foreach (var projectile in _player.GetActiveProjectiles())
+            {
+                if (projectile.IsActive)
+                {
+                    foreach (Enemy enemy in _enemies)
+                    {
+                        if (enemy.IsActive && 
+                            CollisionUtility.CheckAABBCollision(enemy.Bounds, projectile.Bounds))
+                        {
+                            _combatManager.ApplyDamage(_player, enemy, projectile.Damage);
+                            projectile.Deactivate();
+                            break; // Only hit one enemy per projectile
+                        }
                     }
                 }
             }
@@ -458,28 +654,34 @@ namespace AetheriumDepths
                     {
                         if (CollisionUtility.CheckAABBCollision(enemy.Bounds, _player.AttackHitbox))
                         {
-                            // Calculate damage, accounting for damage buff
-                            int damage = AttackDamage;
-                            if (_player.HasDamageBuff)
-                            {
-                                damage *= DamageBuffMultiplier;
-                            }
-                            
-                            // Apply damage to enemy
-                            enemy.TakeDamage(damage);
-                            
-                            // Deactivate the current attack to prevent multiple hits
-                            _player.DeactivateAttack();
-                            
-                            // If enemy was killed, grant essence
-                            if (!enemy.IsActive)
-                            {
-                                _player.AddAetheriumEssence(AetheriumEssenceReward);
-                            }
-                            
+                            _combatManager.ApplyPlayerAttackDamage(enemy);
+                            _player.DeactivateAttack(); // Prevent multiple hits with one attack
                             break; // Only damage one enemy per attack
                         }
                     }
+                }
+            }
+            
+            // Process loot item pickups
+            for (int i = _lootItems.Count - 1; i >= 0; i--)
+            {
+                var lootItem = _lootItems[i];
+                if (lootItem.IsActive && 
+                    CollisionUtility.CheckAABBCollision(_player.Bounds, lootItem.Bounds))
+                {
+                    // Apply loot item effect
+                    if (lootItem.Type == LootType.HealthPotion)
+                    {
+                        int healthBefore = _player.CurrentHealth;
+                        _player.TakeDamage(-LootItem.HealthPotionAmount); // Negative damage = healing
+                        Console.WriteLine($"Player picked up Health Potion. Health: {healthBefore} -> {_player.CurrentHealth}");
+                    }
+                    
+                    // Mark as collected
+                    lootItem.Collect();
+                    
+                    // Remove from list
+                    _lootItems.RemoveAt(i);
                 }
             }
         }
@@ -522,12 +724,19 @@ namespace AetheriumDepths
             // Draw dungeon
             DrawDungeon();
             
+            // Draw loot items
+            foreach (var lootItem in _lootItems)
+            {
+                lootItem.Draw(_spriteBatch);
+            }
+            
             // Draw the weaving altar
             _weavingAltar.Draw(_spriteBatch);
             
             // Draw enemies
             foreach (Enemy enemy in _enemies)
             {
+                // Draw the enemy
                 enemy.Draw(_spriteBatch);
                 
                 // Draw attack hitbox if debugging
@@ -538,7 +747,7 @@ namespace AetheriumDepths
             }
             
             // Draw player
-            _player.Draw(_spriteBatch, _damageInvincibilityTimer);
+            _player.Draw(_spriteBatch, _combatManager.PlayerDamageInvincibilityTimer);
             
             // Draw attack hitbox if debugging
             if (_player.IsAttacking)
@@ -599,7 +808,7 @@ namespace AetheriumDepths
         private void DrawGameplayUI()
         {
             // Draw a translucent panel for UI elements
-            Rectangle uiBackground = new Rectangle(10, 10, 240, 150);
+            Rectangle uiBackground = new Rectangle(10, 10, 240, 200);
             _spriteBatch.Draw(_debugTexture, uiBackground, new Color((byte)0, (byte)0, (byte)0, (byte)180));
             
             // === HEALTH DISPLAY ===
@@ -634,8 +843,68 @@ namespace AetheriumDepths
                 _spriteBatch.DrawString(_gameFont, healthText, textPosition, Color.White);
             }
             
-            // === ESSENCE DISPLAY ===
+            // === MANA DISPLAY ===
             int yPos = 65;
+            
+            // Draw mana bar label
+            if (_gameFont != null)
+            {
+                _spriteBatch.DrawString(_gameFont, "MANA", new Vector2(20, yPos), Color.White);
+            }
+            
+            yPos += 20;
+            
+            // Draw mana bar
+            int manaBarWidth = 200;
+            Rectangle manaBarBackground = new Rectangle(20, yPos, manaBarWidth, 20);
+            Rectangle manaBarFill = new Rectangle(
+                20, 
+                yPos, 
+                (int)(manaBarWidth * ((float)_player.CurrentMana / _player.MaxMana)), 
+                20);
+            
+            // Background (dark blue)
+            _spriteBatch.Draw(_debugTexture, manaBarBackground, new Color((byte)0, (byte)0, (byte)100, (byte)200));
+            // Fill (bright blue)
+            _spriteBatch.Draw(_debugTexture, manaBarFill, new Color((byte)0, (byte)100, (byte)255, (byte)220));
+            
+            // Draw mana text
+            if (_gameFont != null)
+            {
+                string manaText = $"{_player.CurrentMana}/{_player.MaxMana}";
+                Vector2 textSize = _gameFont.MeasureString(manaText);
+                Vector2 textPosition = new Vector2(
+                    manaBarBackground.X + (manaBarBackground.Width - textSize.X) / 2,
+                    manaBarBackground.Y + (manaBarBackground.Height - textSize.Y) / 2);
+                _spriteBatch.DrawString(_gameFont, manaText, textPosition, Color.White);
+            }
+            
+            // === SPELL COOLDOWN ===
+            yPos += 30;
+            
+            // Draw spell cooldown indicator
+            float spellCooldown = _player.GetSpellCooldownRemaining();
+            if (_gameFont != null)
+            {
+                string spellText;
+                Color spellColor;
+                
+                if (spellCooldown <= 0)
+                {
+                    spellText = "Spell: READY";
+                    spellColor = Color.Cyan;
+                }
+                else
+                {
+                    spellText = $"Spell: {spellCooldown:F1}s";
+                    spellColor = Color.Gray;
+                }
+                
+                _spriteBatch.DrawString(_gameFont, spellText, new Vector2(20, yPos), spellColor);
+            }
+            
+            // === ESSENCE DISPLAY ===
+            yPos += 30;
             
             // Draw essence icon
             Rectangle essenceIcon = new Rectangle(20, yPos + 2, 16, 16);
@@ -649,7 +918,7 @@ namespace AetheriumDepths
             }
             
             // === ACTIVE BUFFS ===
-            yPos = 95;
+            yPos += 30;
             
             // Draw active buffs header
             if (_gameFont != null && (_player.HasDamageBuff || _player.HasSpeedBuff))
@@ -760,6 +1029,24 @@ namespace AetheriumDepths
                     _spriteBatch.Draw(_debugTexture, minimapRoom, new Color(roomColor.R, roomColor.G, roomColor.B, (byte)100));
                 }
                 
+                // Draw loot items on minimap
+                foreach (var lootItem in _lootItems)
+                {
+                    if (lootItem.IsActive)
+                    {
+                        int lootDotSize = 3;
+                        Rectangle lootDot = new Rectangle(
+                            (int)(minimapCenter.X + (lootItem.Position.X - worldCenter.X) * scale) - lootDotSize / 2,
+                            (int)(minimapCenter.Y + (lootItem.Position.Y - worldCenter.Y) * scale) - lootDotSize / 2,
+                            lootDotSize,
+                            lootDotSize);
+                        
+                        // Choose color based on loot type
+                        Color lootColor = lootItem.Type == LootType.HealthPotion ? Color.Red : Color.White;
+                        _spriteBatch.Draw(_debugTexture, lootDot, lootColor);
+                    }
+                }
+                
                 // Draw player position on minimap
                 int playerDotSize = 5;
                 Rectangle playerDot = new Rectangle(
@@ -780,7 +1067,20 @@ namespace AetheriumDepths
                             (int)(minimapCenter.Y + (enemy.Position.Y - worldCenter.Y) * scale) - enemyDotSize / 2,
                             enemyDotSize,
                             enemyDotSize);
-                        _spriteBatch.Draw(_debugTexture, enemyDot, Color.Red);
+                            
+                        // Use different colors for enemy types
+                        Color enemyColor = Color.Red; // Default red for basic enemies
+                        
+                        if (enemy is RangedEnemy)
+                        {
+                            enemyColor = Color.OrangeRed; // Orange for ranged enemies
+                        }
+                        else if (enemy is FastEnemy)
+                        {
+                            enemyColor = Color.Lime; // Green for fast enemies
+                        }
+                        
+                        _spriteBatch.Draw(_debugTexture, enemyDot, enemyColor);
                     }
                 }
                 
@@ -797,25 +1097,45 @@ namespace AetheriumDepths
             // If in altar range, draw interaction prompt
             if (CollisionUtility.CheckAABBCollision(_player.Bounds, _weavingAltar.Bounds))
             {
+                // Draw interaction prompt panel
+                Rectangle promptBackground = new Rectangle(
+                    GraphicsDevice.Viewport.Width / 2 - 150,
+                    GraphicsDevice.Viewport.Height - 100,
+                    300,
+                    70);
+                _spriteBatch.Draw(_debugTexture, promptBackground, new Color((byte)0, (byte)0, (byte)0, (byte)180));
+                
+                // Draw interaction prompt text
                 if (_gameFont != null)
                 {
-                    string altarText = "Press E + (1-2) to weave";
-                    Vector2 textSize = _gameFont.MeasureString(altarText);
+                    string promptText = "Press E to interact with Altar";
+                    Vector2 textSize = _gameFont.MeasureString(promptText);
                     Vector2 textPosition = new Vector2(
-                        (GraphicsDevice.Viewport.Width - textSize.X) / 2,
-                        GraphicsDevice.Viewport.Height - 50);
+                        promptBackground.X + (promptBackground.Width - textSize.X) / 2,
+                        promptBackground.Y + 10);
+                    _spriteBatch.DrawString(_gameFont, promptText, textPosition, Color.White);
                     
-                    // Draw background for better visibility
-                    Rectangle textBackground = new Rectangle(
-                        (int)textPosition.X - 10,
-                        (int)textPosition.Y - 5,
-                        (int)textSize.X + 20,
-                        (int)textSize.Y + 10);
-                    _spriteBatch.Draw(_debugTexture, textBackground, new Color((byte)0, (byte)0, (byte)0, (byte)180));
-                    
-                    // Draw prompt text
-                    _spriteBatch.DrawString(_gameFont, altarText, textPosition, Color.White);
+                    string buffText = "Press 1 for Damage Buff (3 Essence)\nPress 2 for Speed Buff (3 Essence)";
+                    Vector2 buffTextSize = _gameFont.MeasureString(buffText);
+                    Vector2 buffTextPosition = new Vector2(
+                        promptBackground.X + (promptBackground.Width - buffTextSize.X) / 2,
+                        promptBackground.Y + 35);
+                    _spriteBatch.DrawString(_gameFont, buffText, buffTextPosition, Color.LightGray);
                 }
+            }
+            
+            // Draw spell casting prompt in bottom right
+            if (_gameFont != null)
+            {
+                string spellPrompt = "Press Q to cast spell";
+                Vector2 promptSize = _gameFont.MeasureString(spellPrompt);
+                Vector2 promptPos = new Vector2(
+                    GraphicsDevice.Viewport.Width - promptSize.X - 20,
+                    GraphicsDevice.Viewport.Height - promptSize.Y - 20);
+                
+                // Draw with appropriate color based on spell readiness
+                Color promptColor = _player.IsSpellReady ? Color.Cyan : Color.Gray;
+                _spriteBatch.DrawString(_gameFont, spellPrompt, promptPos, promptColor);
             }
         }
         

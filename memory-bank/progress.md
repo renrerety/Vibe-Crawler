@@ -730,7 +730,7 @@ Completely transformed the dungeon generation system to create massive rooms and
    - Added proper margins to prevent room generation issues
 
 ### Technical Details
-- Rewrote key portions of the dungeon generation algorithm
+- Rewritten key portions of the dungeon generation algorithm
 - Created helper methods to find optimal starting room placement
 - Expanded the dungeon area to 3x the viewport size in both dimensions
 - Dramatically increased room sizes while maintaining proper BSP structure
@@ -745,3 +745,66 @@ Completely transformed the dungeon generation system to create massive rooms and
 ### Documentation
 - Updated architecture.md with details of the massive dungeon generation
 - Documented BSP parameter optimization for balancing room size with room count
+
+## Phase 8: Enhanced Combat & Enemy Variety (COMPLETED)
+
+**Date:** 2025-05-12
+
+### Summary
+Successfully implemented enhanced combat systems with more enemy variety, a dedicated combat manager, loot drops, and expanded player abilities including ranged spells and mana management.
+
+### Achievements
+1. **Combat Management System**
+   - Created CombatManager class to centralize combat logic
+   - Implemented event-based enemy death handling with loot drops
+   - Added damage invincibility system with visual feedback
+   - Created a unified damage application system for all entities
+
+2. **Loot System**
+   - Implemented LootItem class with different loot types (currently health potions)
+   - Added enemy drop chance calculation for item spawning
+   - Created visual effects for collectible items with hover animations
+   - Implemented player collection and effect application
+
+3. **Projectile System**
+   - Created Projectile class for ranged attacks by both enemies and player
+   - Implemented collision detection with walls and entities
+   - Added visual effects with rotation and color-coding
+   - Created impact deactivation logic
+
+4. **Enemy Variety**
+   - Added RangedEnemy type that maintains distance and fires projectiles
+   - Implemented FastEnemy type with higher speed but lower health
+   - Created specialized AI behaviors for each enemy type
+   - Added visual distinctions for different enemy types
+
+5. **Player Abilities Expansion**
+   - Implemented mana system with resource bar and regeneration
+   - Added spell casting ability with projectile creation
+   - Created cooldown management for balanced spell usage
+   - Added visual and UI feedback for spell readiness
+
+6. **Dungeon Enhancement**
+   - Updated room generation to spawn varied enemy types
+   - Balanced enemy placement and type distribution
+   - Improved minimap to show different enemy types with distinct colors
+
+### Technical Details
+- Used object-oriented inheritance for enemy type specialization
+- Implemented event-based architecture for death events and loot spawning
+- Created robust state management for tracking cooldowns and durations
+- Added comprehensive UI elements to communicate game state clearly
+- Integrated collision detection systems for projectiles and loot items
+
+### Next Steps
+- Phase 9: Environmental Hazards & Interactive Elements
+  - Implement traps and hazards in dungeon rooms
+  - Add destructible objects with potential rewards
+  - Create locked/sealed rooms requiring keys or triggers
+  - Enhance dungeon generation with room templates
+  - Add special rooms with unique challenges or rewards
+
+### Documentation
+- Updated architecture.md with details on the new combat systems
+- Documented the inheritance hierarchy for enemy types
+- Added diagrams for loot and projectile systems

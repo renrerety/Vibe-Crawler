@@ -29,7 +29,8 @@ namespace AetheriumDepths.Core
             MoveRight,
             Attack,
             Dodge,
-            Interact
+            Interact,
+            UseSpell
         }
 
         /// <summary>
@@ -98,6 +99,9 @@ namespace AetheriumDepths.Core
                 GameAction.Interact => _currentKeyboardState.IsKeyDown(Keys.E) ||
                                        _currentGamePadState.Buttons.B == ButtonState.Pressed,
 
+                GameAction.UseSpell => _currentKeyboardState.IsKeyDown(Keys.Q) ||
+                                       _currentGamePadState.IsButtonDown(Buttons.RightShoulder),
+
                 _ => false
             };
         }
@@ -132,6 +136,8 @@ namespace AetheriumDepths.Core
                 GameAction.Dodge => IsKeyJustPressed(Keys.LeftShift) || IsButtonJustPressed(Buttons.A),
 
                 GameAction.Interact => IsKeyJustPressed(Keys.E) || IsButtonJustPressed(Buttons.B),
+
+                GameAction.UseSpell => IsKeyJustPressed(Keys.Q) || IsButtonJustPressed(Buttons.RightShoulder),
 
                 _ => false
             };
